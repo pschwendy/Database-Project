@@ -1,0 +1,17 @@
+{
+    "files.associations": {
+        "unordered_map": "cpp",
+        "vector": "cpp",
+        "iosfwd": "cpp",
+        "array": "cpp",
+        "istream": "cpp",
+        "tuple": "cpp",
+        "utility": "cpp",
+        "iterator": "cpp",
+        "__split_buffer": "cpp",
+        "iostream": "cpp",
+        "exception": "cpp",
+        "ostream": "cpp"
+    },
+    "C_Cpp.errorSquiggles": "Disabled"
+}
