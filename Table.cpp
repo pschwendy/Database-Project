@@ -86,6 +86,7 @@ vector<::database::Row> Table::filter(vector<string> &columns, vector<::database
         for(size_t j = 0; j < comparisons.size(); ++j) {
             if(!compare_entries(rows[i].entries(indecies[j]), comparisons[j])) {
                 good = false;
+                j = comparisons.size();
             }
         }
         if(good) {
@@ -95,55 +96,43 @@ vector<::database::Row> Table::filter(vector<string> &columns, vector<::database
     return subset;
 } // filter() 2
 
-// Input: string column -> column accessing
-// Input: Entry comparison -> entry to compare row entry to
-void Table::edit_row(string &column, ::database::Entry comparison, vector<string> &columns, vector<::database::Entry> &entries) {
-    size_t index;
-    try {
-        index = column_index(column);
-    } catch (std::exception e) {
-        // catch code
-        // throw()
+void Table::edit_rows(vector<string> &columns, vector<::database::Entry> &comparisons, vector<string> &edit_columns, vector<::database::Entry> &entries) {
+    vector<size_t> indecies;
+    for (string column: columns) {
+        try {
+            size_t index = column_index(column);
+            indecies.push(index)
+        } catch (std::exception e) {
+            // catch code
+            // throw()
+        }
+    }
+    vector<size_t> edit_indecies;
+    for (string column: edit_columns) {
+        try {
+            size_t index = column_index(column);
+            edit_indecies.push(index)
+        } catch (std::exception e) {
+            // catch code
+            // throw()
+        }
     }
     for(size_t i = 0; i < rows.size(); ++i) {
-        if(!compare_entries(rows[i].entries(index), comparison)) {
+        bool good = true;
+        for(size_t j = 0; j < comparisons.size(); ++j) {
+            if(!compare_entries(rows[i].entries(indecies[j]), comparisons[j])) {
+                good = false;
+                j = comparisons.size();
+            }
+        }
+        if(good == false) {
             continue;
         }
-        for(size_t j = 0; j < columns.size(); ++i) {
-            size_t edit_index;
-            try {
-                edit_index = column_index(columns[j]);
-            } catch (std::exception e) {
-                // catch code
-            }
-            rows[i].entries(edit_index) = entries[j];
+        for(size_t j = 0; j < comparisons.size(); ++j) {
+            rows[i].entries(edit_indecies[j]) = entries[j];
         }
     }
-} // edit_row 1
-
-void Table::edit_row(string &column, ::database::Entry comparison, vector<string> &columns, vector<::database::Entry> &entries) {
-    size_t index;
-    try {
-        index = column_index(column);
-    } catch (std::exception e) {
-        // catch code
-        // throw()
-    }
-    for(size_t i = 0; i < rows.size(); ++i) {
-        if(rows[i].entries(index) != comparison) {
-            continue;
-        }
-        for(size_t j = 0; j < columns.size(); ++i) {
-            size_t edit_index;
-            try {
-                edit_index = column_index(columns[j]);
-            } catch (std::exception e) {
-                // catch code
-            }
-            rows[i].entries(edit_index) = entries[j];
-        }
-    }
-} // edit_row 1
+} // edit_rows()
 
 
 /*************
@@ -160,7 +149,7 @@ size_t Table::column_index(string &column) {
     return it->second();
 } // column_index()
 
-bool Table::compare_entries(::database::Entry lhs, ::database::Entry rhs) {
+bool Table::compare_entries(::database::Entry &lhs, ::database::Entry &rhs) {
     if (lhs.has_str() && rhs.has_str()) {
         return lhs.str() == rhs.str();
     } else if (lhs.has_flt() && rhs.has_flt()) {

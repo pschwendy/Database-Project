@@ -48,18 +48,17 @@ class Table {
         
         // Input: vector<string> columns -> columns being accessed
         // Input: vector<Entry> comparisons -> list of entries to compare each row entry@column to
-        void edit_rows(vector<string> &columns, vector<::database::Entry> &comparisons, vector<string> &columns, vector<::database::Entry> &entries);
+        void edit_rows(vector<string> &columns, vector<::database::Entry> &comparisons, vector<string> &edit_columns, vector<::database::Entry> &entries);
 
-        // Input: vector<string> columns -> columns being accessed
-        // Input: vector<Entry> comparisons -> list of entries to compare each row entry@column to
-        void edit_rows(vector<string> &columns, vector<::database::Entry> &comparisons, string &column, ::database::Entry entry);
+        // MAY BE USELESS
+        void edit_rows(vector<string> &columns, vector<::database::Entry> &comparisons, string &edit_column, ::database::Entry entry);
 
     private:
         unordered_map<string, size_t> column_indexes;
         vector<::database::Row> rows;
 
         size_t column_index(string &column);
-        bool compare_entries(::database::Entry lhs, ::database::Entry rhs);
+        bool compare_entries(::database::Entry &lhs, ::database::Entry &rhs);
 };
 
 #endif // Table_h
