@@ -22,7 +22,7 @@ using namespace std;
 Table::Table(vector<::database::Row> &input_rows, vector<string> &columns) {
     rows = input_rows;
     for(int i = 0; i < columns.size(); ++i) {
-        column_indexes.emplace(columns[i], i);
+        column_indecies.emplace(columns[i], i);
     }
 } // Table()
 
@@ -140,8 +140,8 @@ void Table::edit_rows(vector<string> &columns, vector<::database::Entry> &compar
  *************/
 
 size_t Table::column_index(string &column) {
-    auto it = column_indexes.find(column);
-    if(it == column_indexes.end()) {
+    auto it = column_indecies.find(column);
+    if(it == column_indecies.end()) {
         // throw()
         cout << "ERROR" << endl;
         return;

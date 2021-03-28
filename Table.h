@@ -54,7 +54,7 @@ class Table {
         void edit_rows(vector<string> &columns, vector<::database::Entry> &comparisons, string &edit_column, ::database::Entry entry);
 
     private:
-        unordered_map<string, size_t> column_indexes;
+        unordered_map<string, size_t> column_indecies;
         vector<::database::Row> rows;
 
         size_t column_index(string &column);
