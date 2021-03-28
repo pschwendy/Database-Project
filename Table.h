@@ -28,32 +28,27 @@ class Table {
         // Returns first row where Entry@column = comparison
         // Input: string column -> column accessing
         // Input: Entry comparison -> entry to compare row entry to
-        Row get_row(string &column, ::database::Entry comparison);
+        ::database::Row get_row(string &column, ::database::Entry comparison);
 
         // Filters and returns rows where Entry@column = comparison
         // Input: string column -> column accessing
         // Input: Entry comparison -> entry to compare row entry to
-        vector<Row> filter(string &column, ::database::Entry comparison);
+        vector<::database::Row> filter(string &column, ::database::Entry comparison);
 
         // Filters and returns rows where each Entry@each column = the said comparison
         // Input: vector<string> columns -> columns being accessed
         // Input: vector<Entry> comparisons -> list of entries to compare each row entry@column to
-        vector<Row> filter(vector<string> &columns, vector<::database::Entry> &comparisons);
+        vector<::database::Row> filter(vector<string> &columns, vector<::database::Entry> &comparisons);
 
-        // Entry get_entry(string column);
-
-        // Input: string column -> column accessing
-        // Input: Entry comparison -> entry to compare row entry to
-        void edit_row(string &column, ::database::Entry comparison, vector<string> &columns, vector<Entry> &entries);
-
+        // MAY BE USELESS
+        void edit_rows(string &column, ::database::Entry comparison, vector<string> &columns, vector<::database::Entry> &entries);
+        
+        // MAY BE USELESS
+        void edit_rows(string &column, ::database::Entry comparison, &comparisons, string &column, ::database::Entry entry);
+        
         // Input: vector<string> columns -> columns being accessed
         // Input: vector<Entry> comparisons -> list of entries to compare each row entry@column to
         void edit_rows(vector<string> &columns, vector<::database::Entry> &comparisons, vector<string> &columns, vector<::database::Entry> &entries);
-
-        // Input: string &comparison_column ->
-        // Input: string column -> column accessing
-        // Input: Entry comparison -> entry to compare row entry to
-        void edit_row(string &comparison_column, ::database::Entry comparison, string &column, ::database::Entry entry);
 
         // Input: vector<string> columns -> columns being accessed
         // Input: vector<Entry> comparisons -> list of entries to compare each row entry@column to
@@ -62,6 +57,9 @@ class Table {
     private:
         unordered_map<string, size_t> column_indexes;
         vector<::database::Row> rows;
+
+        size_t column_index(string &column);
+        bool compare_entries(::database::Entry lhs, ::database::Entry rhs);
 };
 
 #endif // Table_h
