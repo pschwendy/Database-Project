@@ -19,10 +19,10 @@ using namespace std;
 // Constructs table given imput rows and columns
 // Input: vector<Row> input_rows -> rows of new table
 // Input: vector<string> columns -> table colums, to be sorted in a map
-Table::Table(vector<::database::Row> &input_rows, vector<string> &columns) {
-    rows = input_rows;
-    for(int i = 0; i < columns.size(); ++i) {
-        column_indecies.emplace(columns[i], i);
+Table::Table(vector<string> &columns, vector<string> &column_types) {
+    for(size_t i = 0; i < columns.size(); ++i) {
+        Info info = Info(i, column_types[i]);
+        column_indecies.emplace(columns[i], info);
     }
 } // Table()
 
@@ -38,7 +38,7 @@ Table::Table(vector<::database::Row> &input_rows, vector<string> &columns) {
         // throw()
     }
     for(size_t i = 0; i < rows.size(); ++i) {
-        if(compare_entries(rows[i].entries(index), comparison)) {
+        if(compare_entries(rows[i].entries(index.index), comparison)) {
             return row;
         }
     }
@@ -58,7 +58,7 @@ vector<::database::Row> Table::filter(string &column, ::database::Entry comparis
         // throw()
     }
     for(size_t i = 0; i < rows.size(); ++i) {
-        if(compare_entries(rows[i].entries(index), comparison)) {
+        if(compare_entries(rows[i].entries(index.index), comparison)) {
             subset.emplace_back(rows[i]);
         }
     }
@@ -70,9 +70,9 @@ vector<::database::Row> Table::filter(string &column, ::database::Entry comparis
 // Input: vector<Entry> comparisons -> list of entries to compare each row entry@column to
 vector<::database::Row> Table::filter(vector<string> &columns, vector<::database::Entry> &comparisons) {
     vector<Row> subset;
-    vector<size_t> indecies;
+    vector<Info> indecies;
     for (string column: columns) {
-        size_t index;
+        Info index;
         try {
             index = column_index(column);
         } catch (std::exception e) {
@@ -84,7 +84,12 @@ vector<::database::Row> Table::filter(vector<string> &columns, vector<::database
     for(size_t i = 0; i < rows.size(); ++i) {
         bool good = true;
         for(size_t j = 0; j < comparisons.size(); ++j) {
-            if(!compare_entries(rows[i].entries(indecies[j]), comparisons[j])) {
+            bool correct_entry = correct_type(indecies[j], rows[i].entries(indecies[j].index));
+            bool correct_comparison = correct_type(indecies[j], comparisons[j]);
+            if(!correct_entry || !correct_comparison) {
+                // throw()
+            }
+            if(!compare_entries(rows[i].entries(indecies[j].index), comparisons[j])) {
                 good = false;
                 j = comparisons.size();
             }
@@ -97,20 +102,20 @@ vector<::database::Row> Table::filter(vector<string> &columns, vector<::database
 } // filter() 2
 
 void Table::edit_rows(vector<string> &columns, vector<::database::Entry> &comparisons, vector<string> &edit_columns, vector<::database::Entry> &entries) {
-    vector<size_t> indecies;
+    vector<Info> indecies;
     for (string column: columns) {
         try {
-            size_t index = column_index(column);
+            Info index = column_index(column);
             indecies.push(index)
         } catch (std::exception e) {
             // catch code
             // throw()
         }
     }
-    vector<size_t> edit_indecies;
+    vector<Info> edit_indecies;
     for (string column: edit_columns) {
         try {
-            size_t index = column_index(column);
+            Info index = column_index(column);
             edit_indecies.push(index)
         } catch (std::exception e) {
             // catch code
@@ -120,7 +125,12 @@ void Table::edit_rows(vector<string> &columns, vector<::database::Entry> &compar
     for(size_t i = 0; i < rows.size(); ++i) {
         bool good = true;
         for(size_t j = 0; j < comparisons.size(); ++j) {
-            if(!compare_entries(rows[i].entries(indecies[j]), comparisons[j])) {
+            bool correct_entry = correct_type(indecies[j], rows[i].entries(indecies[j].index));
+            bool correct_comparison = correct_type(indecies[j], comparisons[j]);
+            if(!correct_entry || !correct_comparison) {
+                // throw()
+            }
+            if(!compare_entries(rows[i].entries(indecies[j].index), comparisons[j])) {
                 good = false;
                 j = comparisons.size();
             }
@@ -129,17 +139,23 @@ void Table::edit_rows(vector<string> &columns, vector<::database::Entry> &compar
             continue;
         }
         for(size_t j = 0; j < comparisons.size(); ++j) {
-            rows[i].entries(edit_indecies[j]) = entries[j];
+            if(!correct_type(edit_indecies[j], entries[j])) {
+                // throw()
+            }
+            rows[i].entries(edit_indecies[j].index) = entries[j];
         }
     }
 } // edit_rows()
 
+void insert(::database::Row row) {
+    rows.emplace_back(row);
+} // insert()
 
 /*************
  *  PRIVATE  *
  *************/
 
-size_t Table::column_index(string &column) {
+Info Table::column_index(string &column) {
     auto it = column_indecies.find(column);
     if(it == column_indecies.end()) {
         // throw()
@@ -162,3 +178,22 @@ bool Table::compare_entries(::database::Entry &lhs, ::database::Entry &rhs) {
         // throw()
     }
 } // compare_entries()
+
+bool Table::correct_type(Info info, Entry &entry) {
+    switch(info.type) {
+        case 0:
+            return entry.has_bool();
+            break;
+        case 1:
+            return entry.has_num();
+            break;
+        case 2:
+            return entry.has_flt();
+            break;
+        case 3:
+            return entry.has_str();
+            break;
+        default:
+            return false;
+    }
+} // correct_type()
