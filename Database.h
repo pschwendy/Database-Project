@@ -14,8 +14,18 @@
 
 using namespace std;
 
+// Class containing database when running program
 class Database {
     public:
+        // Database Contructor
+        // TODO: Implement when storage system is figured out
+        Database();
+
+        // Returns name of database
+        string get_name() {
+            return db_name;
+        } // get_name()
+
         // Updates table entries @ edit_columns where row contains comparisons @ columns
         // Input: string &table_name -> name of table
         // Input: vector<string> &edit_columns -> list of names of columns where new entries are located
@@ -59,6 +69,7 @@ class Database {
         void select_join(string &table_name);
     
     private:
+        string db_name;
         unordered_map<string, Table*> tables;
 
         Table* get_table(string& table_name);
