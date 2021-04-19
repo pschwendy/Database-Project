@@ -7,31 +7,37 @@
 #include "Storage.h"
 using namespace std;
 
-// TODO: Implement once figure out how data is written
+// Given the name of the database, reads data from file system if the database exists
+// If not, creates a new blank database
+// Input: string &db_name -> name of database 
 static Database* Storage::read_data(string &db_name) {
     Database db;
-    
+
+    string file = "/databases/databases.txt";
     ifstream databases(file);
+
+    string path = "/databases/" + db_name + "/";
+    
     bool exists;
-    string db_names;
+    string name_check;
     if(!databases.good()) {
         // throw()
     }
-    while(databases >> db_names) {
-        if(db_names == db.get_name()) {
+    while(databases >> name_check) {
+        if(name_check == db_name) {
             exists = true;
             break;
         }
     }
 
     if(exists) {
-        ifstream table_list("/databases/" + db.get_name() + "/tables.txt");
+        ifstream table_list(path + "tables.txt");
         string table_name;
         vector<string> names;
         vector<Table> tables;
         
         while(table_list >> table_name) {
-            ifstream schema("/databases/" + db.get_name() + "/" + table_name + "_schema.txt");
+            ifstream schema(path + table_name + "_schema.txt");
             vector<string> columns;
             vector<string> types;
 
@@ -39,7 +45,7 @@ static Database* Storage::read_data(string &db_name) {
                 schema >> columns;
             }
 
-            ifstream rows("/databases/" + db.get_name() + "/" + table_name + "_rows.txt");
+            ifstream rows(path + table_name + "_rows.txt");
             ::database::Table parse_table;
             parse_table.ParseFromIstream(&rows));
             Table table = Table(table_name, columns, types, parse_table);
@@ -55,22 +61,25 @@ static Database* Storage::read_data(string &db_name) {
     return db;
 } // read_data()
 
-// TODO: Figure out how to read/write/search directory
+// Writes to database directory given a database
+// Input: Database &db -> database being written to storage
 static void Storage::write_data(Database &db) {
     // Add file to list databases inside of some collective database folder
     // Add file to list tables inside each individual database folder
     // Iterate throught files to get and use paths
     string file = "/databases/databases.txt";
     string path = "/databases/" + db.get_name() + "/";
+
     stringstream table_list;
     ifstream databases(file);
+
     bool exists;
-    string db_names;
+    string name_check;
     if(!databases.good()) {
         // throw()
     }
     while(databases >> db_names) {
-        if(db_names == db.get_name()) {
+        if(name_check == db.get_name()) {
             exists = true;
             break;
         }
@@ -96,7 +105,7 @@ static void Storage::write_data(Database &db) {
             // throw()
         }
     }
-    
+
     ofstream os(path + "tables.txt");
     os << table_list;
 } // write_data()
