@@ -10,7 +10,7 @@
 #include <unordered_map>
 #include <string>
 #include <vector>
-#include "row.pb.h"
+#include "table.pb.h"
 
 using namespace std;
 
@@ -25,6 +25,31 @@ class Table {
         // Input: vector<string> columns -> table colums, to be sorted in a map
         Table(vector<string> &columns, vector<string> &column_types);
 
+        // Returns schema of table in string from
+        string schema() {
+            string result;
+            for(auto it : column_indecies) {
+                string type_str;
+                switch(it->second.type) {
+                    case 0:
+                        type_str = "BOOL";
+                        break;
+                    case 1:
+                        type_str = "INT";
+                        break;
+                    case 2:
+                        type_str = "FLOAT";
+                        break;
+                    case 3:
+                        type_str = "STRING";
+                        break;
+                }
+                string column = it->first
+                result += type_str + " " + column;
+            }
+
+            return result;
+        }
         // Returns first row where Entry@column = comparison
         // Input: string column -> column accessing
         // Input: Entry comparison -> entry to compare row entry to
@@ -55,6 +80,10 @@ class Table {
 
         void insert(::database::row &row);
         
+        bool serialize(ostream* out) {
+            return table.SerializeToOstream(out);
+        }
+
     private:
         struct Info {
             size_t index;
@@ -85,7 +114,8 @@ class Table {
             } // Info
         };
         unordered_map<string, Info> column_indecies;
-        vector<::database::Row> rows;
+        // vector<::database::Row> rows;
+        ::database::Table table;
 
         Info column_index(string &column);
         bool compare_entries(::database::Entry &lhs, ::database::Entry &rhs);

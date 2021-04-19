@@ -19,11 +19,12 @@ using namespace std;
 // Constructs table given imput rows and columns
 // Input: vector<Row> input_rows -> rows of new table
 // Input: vector<string> columns -> table colums, to be sorted in a map
-Table::Table(vector<string> &columns, vector<string> &column_types) {
+Table::Table(vector<string> &columns, vector<string> &column_types, ::database::Table &input_table) {
     for(size_t i = 0; i < columns.size(); ++i) {
         Info info = Info(i, column_types[i]);
         column_indecies.emplace(columns[i], info);
     }
+    table = input_table;
 } // Table()
 
 // Returns first row where Entry@column = comparison
@@ -37,8 +38,8 @@ Table::Table(vector<string> &columns, vector<string> &column_types) {
         // catch code
         // throw()
     }
-    for(size_t i = 0; i < rows.size(); ++i) {
-        if(compare_entries(rows[i].entries(index.index), comparison)) {
+    for(size_t i = 0; i < table.rows_size(); ++i) {
+        if(compare_entries(table.rows(i).entries(index.index), comparison)) {
             return row;
         }
     }
@@ -57,9 +58,9 @@ vector<::database::Row> Table::filter(string &column, ::database::Entry comparis
         // catch code
         // throw()
     }
-    for(size_t i = 0; i < rows.size(); ++i) {
-        if(compare_entries(rows[i].entries(index.index), comparison)) {
-            subset.emplace_back(rows[i]);
+    for(size_t i = 0; i < table.rows_size(); ++i) {
+        if(compare_entries(table.rows(i).entries(index.index), comparison)) {
+            subset.emplace_back(table.rows(i));
         }
     }
     return subset;
@@ -81,21 +82,21 @@ vector<::database::Row> Table::filter(vector<string> &columns, vector<::database
         }
         indecies.push_back(index);
     }
-    for(size_t i = 0; i < rows.size(); ++i) {
+    for(size_t i = 0; i < table.rows_size(); ++i) {
         bool good = true;
         for(size_t j = 0; j < comparisons.size(); ++j) {
-            bool correct_entry = correct_type(indecies[j], rows[i].entries(indecies[j].index));
+            bool correct_entry = correct_type(indecies[j], table.rows(i).entries(indecies[j].index));
             bool correct_comparison = correct_type(indecies[j], comparisons[j]);
             if(!correct_entry || !correct_comparison) {
                 // throw()
             }
-            if(!compare_entries(rows[i].entries(indecies[j].index), comparisons[j])) {
+            if(!compare_entries(table.rows(i).entries(indecies[j].index), comparisons[j])) {
                 good = false;
                 j = comparisons.size();
             }
         }
         if(good) {
-            subset.emplace_back(rows[i]);
+            subset.emplace_back(table.rows(i));
         }
     }
     return subset;
@@ -122,15 +123,15 @@ void Table::edit_rows(vector<string> &columns, vector<::database::Entry> &compar
             // throw()
         }
     }
-    for(size_t i = 0; i < rows.size(); ++i) {
+    for(size_t i = 0; i < table.rows_size(); ++i) {
         bool good = true;
         for(size_t j = 0; j < comparisons.size(); ++j) {
-            bool correct_entry = correct_type(indecies[j], rows[i].entries(indecies[j].index));
+            bool correct_entry = correct_type(indecies[j], table.rows(i).entries(indecies[j].index));
             bool correct_comparison = correct_type(indecies[j], comparisons[j]);
             if(!correct_entry || !correct_comparison) {
                 // throw()
             }
-            if(!compare_entries(rows[i].entries(indecies[j].index), comparisons[j])) {
+            if(!compare_entries(table.rows(i).entries(indecies[j].index), comparisons[j])) {
                 good = false;
                 j = comparisons.size();
             }
@@ -142,13 +143,13 @@ void Table::edit_rows(vector<string> &columns, vector<::database::Entry> &compar
             if(!correct_type(edit_indecies[j], entries[j])) {
                 // throw()
             }
-            rows[i].entries(edit_indecies[j].index) = entries[j];
+            table.rows(i).entries(edit_indecies[j].index) = entries[j];
         }
     }
 } // edit_rows()
 
-void insert(::database::Row row) {
-    rows.emplace_back(row);
+void insert(::database::Row* row) {
+    table.add_rows() = row;
 } // insert()
 
 /*************

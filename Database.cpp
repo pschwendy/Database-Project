@@ -10,6 +10,16 @@
  *  PUBLIC  *
  ************/
 
+// Database Contructor
+Database(string &name, 
+            vector<string> &table_names, 
+            vector<Table> &table_ptrs) {
+    db_name = name;
+    for(int i = 0; i < table_names.size(); ++i) {
+        tables.insert(pair<string, Table>(table_names[i], &(table_ptrs[i])));
+    }
+}
+
 // Updates table entries @ edit_columns where row contains comparisons @ columns
 // Input: string &table_name -> name of table
 // Input: vector<string> &edit_columns -> list of names of columns where new entries are located
@@ -17,10 +27,10 @@
 // Input: vector<string> &columns -> list of names of columns where comparison entries are located
 // Input: vector<::database::Entry> &comparisons -> list of comparison entries
 void Database::update(string &table_name, 
-/* parameter */ vector<string> &edit_columns,  
-/* parameter */ vector<::database::Entry> &entries, 
-/* parameter */ vector<string> &columns, 
-/* parameter */ vector<::database::Entry> &comparisons) {
+                        vector<string> &edit_columns,  
+                        vector<::database::Entry> &entries, 
+                        vector<string> &columns, 
+                        vector<::database::Entry> &comparisons) {
     try {
         Table* table = get_table(table_name);
     } catch () {
@@ -33,7 +43,7 @@ void Database::update(string &table_name,
 // Input: string &table_name -> name of table
 // Input: ::database::Row row -> row
 void insert(string &table_name, 
-/* parameter */ ::database::Row row) {
+            ::database::Row row) {
     Table* table = get_table(table_name);
     table->insert(row);
 } // insert()
@@ -43,8 +53,8 @@ void insert(string &table_name,
 // Input: vector<string> &columns -> list of names of columns where comparison entries are located
 // Input: vector<::database::Entry> &comparisons -> list of comparison entries
 vector<::database::Row> Database::select(string &table_name, 
-/* parameter */ vector<string> &columns, 
-/* parameter */ vector<::database::Entry> &comparisons) {
+                                            vector<string> &columns, 
+                                            vector<::database::Entry> &comparisons) {
     try {
         Table* table = get_table(table_name);
     } catch () {
@@ -64,8 +74,8 @@ void Database::drop_table(string &table_name) {
 // Input: vector<string> &column_names -> list of columns in table
 // Input: vector<string> &column_types -> list of specified data types of columns in table
 void create_table(string &table_name, 
-/* parameter */ vector<string> &column_names, 
-/* parameter */ vector<string> &column_types) {
+                    vector<string> &column_names, 
+                    vector<string> &column_types) {
     table = Table(column_names, column_types);
     tables.emplace(table_name, table);
 } // create_table()

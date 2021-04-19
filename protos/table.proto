@@ -12,3 +12,7 @@ message Entry {
 message Row {
     repeated Entry entries = 1;
 }
+
+message Table {
+    repeated Row rows = 1;
+}

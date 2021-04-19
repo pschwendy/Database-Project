@@ -17,14 +17,27 @@ using namespace std;
 // Class containing database when running program
 class Database {
     public:
-        // Database Contructor
-        // TODO: Implement when storage system is figured out
-        Database();
+        // Default Constructor  
+        Database(string name) { 
+            db_name = name;
+        }
 
+        // Database Contructor
+        Database(string name, vector<string> table_names, vector<Table*> table_ptrs);
+        
         // Returns name of database
         string get_name() {
             return db_name;
         } // get_name()
+
+        // Returns number of tables
+        int num_tables() {
+            return tables.size();
+        } // num_tables()
+        
+        const unordered_map<string, Table*>* get_tables() {
+            return &tables;
+        }
 
         // Updates table entries @ edit_columns where row contains comparisons @ columns
         // Input: string &table_name -> name of table
