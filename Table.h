@@ -26,63 +26,47 @@ class Table {
         Table(vector<string> &columns, vector<string> &column_types);
 
         // Returns schema of table in string from
-        string schema() {
-            string result;
-            for(auto it : column_indecies) {
-                string type_str;
-                switch(it->second.type) {
-                    case 0:
-                        type_str = "BOOL";
-                        break;
-                    case 1:
-                        type_str = "INT";
-                        break;
-                    case 2:
-                        type_str = "FLOAT";
-                        break;
-                    case 3:
-                        type_str = "STRING";
-                        break;
-                }
-                string column = it->first
-                result += type_str + " " + column;
-            }
+        string schema();
 
-            return result;
-        }
         // Returns first row where Entry@column = comparison
         // Input: string column -> column accessing
         // Input: Entry comparison -> entry to compare row entry to
-        ::database::Row get_row(string &column, ::database::Entry comparison);
+        ::database::Row get_row(string &column, 
+                                    ::database::Entry comparison);
 
         // Filters and returns rows where Entry@column = comparison
         // Input: string column -> column accessing
         // Input: Entry comparison -> entry to compare row entry to
-        vector<::database::Row> filter(string &column, ::database::Entry comparison);
+        vector<::database::Row> filter(string &column, 
+                                        ::database::Entry comparison);
 
         // Filters and returns rows where each Entry@each column = the said comparison
         // Input: vector<string> columns -> columns being accessed
         // Input: vector<Entry> comparisons -> list of entries to compare each row entry@column to
-        vector<::database::Row> filter(vector<string> &columns, vector<::database::Entry> &comparisons);
-
-        // MAY BE USELESS
-        void edit_rows(string &column, ::database::Entry comparison, vector<string> &columns, vector<::database::Entry> &entries);
-        
-        // MAY BE USELESS
-        void edit_rows(string &column, ::database::Entry comparison, &comparisons, string &column, ::database::Entry entry);
+        vector<::database::Row> filter(vector<string> &columns, 
+                                        vector<::database::Entry> &comparisons);
         
         // Input: vector<string> columns -> columns being accessed
         // Input: vector<Entry> comparisons -> list of entries to compare each row entry@column to
-        void edit_rows(vector<string> &columns, vector<::database::Entry> &comparisons, vector<string> &edit_columns, vector<::database::Entry> &entries);
+        void edit_rows(vector<string> &columns, 
+                        vector<::database::Entry> &comparisons, 
+                        vector<string> &edit_columns, 
+                        vector<::database::Entry> &entries);
 
-        // MAY BE USELESS
-        void edit_rows(vector<string> &columns, vector<::database::Entry> &comparisons, string &edit_column, ::database::Entry entry);
-
+        // Inserts row into database
+        // Checks if row aligns with correct types
+        // Input: ::database::row &row -> row being inserted
         void insert(::database::row &row);
         
+        // Serializes table to ostream
+        // Input: ostream* out -> output ostream
         bool serialize(ostream* out) {
             return table.SerializeToOstream(out);
         }
+
+        // Returns type as string given column name
+        // Input: string &column -> column name
+        string get_type(string &column);
 
     private:
         struct Info {
@@ -93,6 +77,8 @@ class Table {
                 float_ = 2,
                 string_ = 3
             } type;
+            
+            // Info Constructor  
             Info(size_t index_in, string& type_str) {
                 index = index_in;
                 switch(type_str) {
@@ -111,15 +97,15 @@ class Table {
                     default:
                         break;
                 }
-            } // Info
-        };
+            } // Info()
+        }; // struct Info
+
         unordered_map<string, Info> column_indecies;
-        // vector<::database::Row> rows;
         ::database::Table table;
 
         Info column_index(string &column);
         bool compare_entries(::database::Entry &lhs, ::database::Entry &rhs);
         bool correct_type(Info info);
-};
+}; // class Table
 
 #endif // Table_h

@@ -16,8 +16,8 @@ namespace fs = std::filesystem;
 
 class Storage {
     public:
-        static Database read_data();
-        static void write_data(Database db);
+        static Database read_data(string &db_name);
+        static void write_data(Database &db);
 };
 
 #endif // Storage_h

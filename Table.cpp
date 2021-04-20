@@ -19,6 +19,7 @@ using namespace std;
 // Constructs table given imput rows and columns
 // Input: vector<Row> input_rows -> rows of new table
 // Input: vector<string> columns -> table colums, to be sorted in a map
+// Input: ::database::Table &input_table -> table
 Table::Table(vector<string> &columns, vector<string> &column_types, ::database::Table &input_table) {
     for(size_t i = 0; i < columns.size(); ++i) {
         Info info = Info(i, column_types[i]);
@@ -26,6 +27,43 @@ Table::Table(vector<string> &columns, vector<string> &column_types, ::database::
     }
     table = input_table;
 } // Table()
+
+// Constructor
+// Constructs table given imput rows and columns
+// Input: vector<Row> input_rows -> rows of new table
+// Input: vector<string> columns -> table colums, to be sorted in a map
+Table::Table(vector<string> &columns, vector<string> &column_types) {
+    for(size_t i = 0; i < columns.size(); ++i) {
+        Info info = Info(i, column_types[i]);
+        column_indecies.emplace(columns[i], info);
+    }
+} // Table()
+
+// Returns schema of table in string from
+string Table::schema() {
+    string result;
+    for(auto it : column_indecies) {
+        string type_str;
+        switch(it->second().type) {
+            case 0:
+                type_str = "BOOL";
+                break;
+            case 1:
+                type_str = "INT";
+                break;
+            case 2:
+                type_str = "FLOAT";
+                break;
+            case 3:
+                type_str = "STRING";
+                break;
+        }
+        string column = it->first
+        result += type_str + " " + column;
+    }
+
+    return result;
+} // schema()
 
 // Returns first row where Entry@column = comparison
 // Input: string column -> column accessing
@@ -102,7 +140,10 @@ vector<::database::Row> Table::filter(vector<string> &columns, vector<::database
     return subset;
 } // filter() 2
 
-void Table::edit_rows(vector<string> &columns, vector<::database::Entry> &comparisons, vector<string> &edit_columns, vector<::database::Entry> &entries) {
+void Table::edit_rows(vector<string> &columns, 
+                        vector<::database::Entry> &comparisons, 
+                        vector<string> &edit_columns, 
+                        vector<::database::Entry> &entries) {
     vector<Info> indecies;
     for (string column: columns) {
         try {
@@ -149,9 +190,40 @@ void Table::edit_rows(vector<string> &columns, vector<::database::Entry> &compar
 } // edit_rows()
 
 void insert(::database::Row* row) {
+    for(auto it : column_indecies) {
+        if(!correct_type(it->second(), row.get_entries((it->second()).index)) {
+            // throw()
+        }
+    }
     table.add_rows() = row;
 } // insert()
 
+string Table::get_type(string &column) {
+    auto it = column_indecies.find(column);
+    if(it == column_indecies.end()) {
+        // throw()
+        cout << "ERROR" << endl;
+        return;
+    }
+    
+    string type_str;
+    switch(it->second().type) {
+        case 0:
+            type_str = "BOOL";
+            break;
+        case 1:
+            type_str = "INT";
+            break;
+        case 2:
+            type_str = "FLOAT";
+            break;
+        case 3:
+            type_str = "STRING";
+            break;
+    }
+
+    return type_str;
+}
 /*************
  *  PRIVATE  *
  *************/
