@@ -98,10 +98,10 @@ static void Storage::write_data(Database &db) {
         table_list << it.first << "\n";
 
         ofstream schema(path + it->first + "_schema.txt");
-        schema << it->second()->schema();
+        schema << it->second->schema();
         
         ofstream rows(path + it->first + "_rows.txt");
-        if(!it->second()->serialize(rows)) {
+        if(!it->second->serialize(rows)) {
             // throw()
         }
     }

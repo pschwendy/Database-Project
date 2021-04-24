@@ -1,0 +1,18 @@
+syntax = "proto2";
+
+package database;
+
+message Entry {
+    optional string str = 1;
+    optional float flt = 2;
+    optional int64 num = 3;
+    optional bool boolean = 4;
+}
+
+message Row {
+    repeated Entry entries = 1;
+}
+
+message ProtoTable {
+    repeated Row rows = 1;
+}

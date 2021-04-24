@@ -17,7 +17,13 @@ using namespace std;
 class Table {
     public:
         // Empty Constructor
-        Table();
+        Table() { }
+
+        // Constructor
+        // Constructs table given imput rows and columns
+        // Input: vector<Row> input_rows -> rows of new table
+        // Input: vector<string> columns -> table colums, to be sorted in a map
+        Table(vector<string> &columns, vector<string> &column_types, ::database::Table &input_table);
 
         // Constructor
         // Constructs table given imput rows and columns
@@ -56,7 +62,7 @@ class Table {
         // Inserts row into database
         // Checks if row aligns with correct types
         // Input: ::database::row &row -> row being inserted
-        void insert(::database::row &row);
+        void insert(::database::Row &row);
         
         // Serializes table to ostream
         // Input: ostream* out -> output ostream
@@ -78,24 +84,19 @@ class Table {
                 string_ = 3
             } type;
             
+            Info() { }
+
             // Info Constructor  
             Info(size_t index_in, string& type_str) {
                 index = index_in;
-                switch(type_str) {
-                    case "Bool" || "bool":
-                        type = bool_;
-                        break;
-                    case "Int" || "int":
-                        type = int_;
-                        break;
-                    case "Float" || "float":
-                        type = float_;
-                        break;
-                    case "String" || "string":
-                        type = string_;
-                        break;
-                    default:
-                        break;
+                if(type_str == "BOOL" || type_str == "bool") {
+                    type = bool_;
+                } else if(type_str == "INT" || type_str == "int") {
+                    type = int_;
+                } else if(type_str == "FLOAT" || type_str == "float") {
+                    type = float_;
+                } else if(type_str == "STRING" || type_str == "string") {
+                    type = string_;
                 }
             } // Info()
         }; // struct Info
@@ -103,9 +104,9 @@ class Table {
         unordered_map<string, Info> column_indecies;
         ::database::Table table;
 
-        Info column_index(string &column);
-        bool compare_entries(::database::Entry &lhs, ::database::Entry &rhs);
-        bool correct_type(Info info);
+        Info column_index(const string &column);
+        bool compare_entries(const ::database::Entry &lhs, const ::database::Entry &rhs);
+        bool correct_type(Info info, const ::database::Entry &entry);
 }; // class Table
 
 #endif // Table_h
