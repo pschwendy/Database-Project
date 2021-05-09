@@ -4,7 +4,7 @@
 // table_test.cpp
 //
 
-#include "Table.cpp"
+#include "Table.h"
 #include "table.pb.h"
 #include <iostream>
 #include <cassert>
@@ -138,6 +138,10 @@ int main() {
     /* Passed Filter Tests */
 
     /* Update Test */
-    //table.edit_rows()
+    table.edit_rows(columns1, comparisons1, columns2, comparisons2);
+    assert(table.filter(columns2, comparisons2).size() == 2);
+    table.edit_rows(columns2, comparisons2, columns1, comparisons1);
+    assert(table.filter(columns1, comparisons1).size() == 2);
+    //table.edit_rows(columns3, comparisons3, )
 
 }
