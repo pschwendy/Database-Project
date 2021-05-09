@@ -4,7 +4,7 @@
 // Storage.cpp
 //
 
-#include "Storage.h"
+#include "storage.h"
 using namespace std;
 
 // Given the name of the database, reads data from file system if the database exists

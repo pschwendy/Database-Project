@@ -4,5 +4,6 @@ cc_library(
 	hdrs = ["database.h"],
 	deps = [
 		"//table:table_lib",
-	]
+	],
+    visibility = ["//visibility:public"],
 )
