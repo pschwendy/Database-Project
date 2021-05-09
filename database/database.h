@@ -10,7 +10,7 @@
 #include <unordered_map>
 #include <string>
 #include <vector>
-#include "table.h"
+#include "table/table.h"
 
 using namespace std;
 

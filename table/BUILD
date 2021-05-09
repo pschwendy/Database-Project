@@ -13,4 +13,5 @@ cc_library(
     deps = [
         "//protos:table_cc_proto"
     ],
+    visibility = ["//visibility:public"],
 )
