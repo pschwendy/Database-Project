@@ -10,7 +10,7 @@
 #include <unordered_map>
 #include <string>
 #include <vector>
-#include "table.pb.h"
+#include "protos/table.pb.h"
 
 using namespace std;
 

@@ -9,6 +9,9 @@ cc_library(
     name = "Table",
     srcs = ["Table.cpp"],
     hdrs = ["Table.h"],
+    deps = [
+        "//protos:table_cc_proto"
+    ],
 )
 
 cc_binary(
@@ -16,6 +19,5 @@ cc_binary(
     srcs = ["table_test.cpp"],
     deps = [
         ":Table",
-        ":ProtoTable",
     ],
 )

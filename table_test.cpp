@@ -5,7 +5,7 @@
 //
 
 #include "Table.h"
-#include "table.pb.h"
+#include "protos/table.pb.h"
 #include <iostream>
 #include <cassert>
 
