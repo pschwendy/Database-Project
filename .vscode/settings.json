@@ -26,7 +26,9 @@
         "stack": "cpp",
         "string": "cpp",
         "string_view": "cpp",
-        "unordered_set": "cpp"
+        "unordered_set": "cpp",
+        "stdexcept": "cpp",
+        "ios": "cpp"
     },
     "C_Cpp.errorSquiggles": "Disabled"
 }

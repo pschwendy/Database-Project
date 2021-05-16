@@ -74,6 +74,8 @@ class Table {
         // Input: string &column -> column name
         string get_type(string &column);
 
+        void output();
+
     private:
         struct Info {
             size_t index;

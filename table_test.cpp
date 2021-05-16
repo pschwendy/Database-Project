@@ -48,14 +48,15 @@ using namespace std;
 
 ::database::Entry make_entry(Table* table, string column, int a, float b, string c, bool d) {
     string type = table->get_type(column);
+    cout << "TYPE " << type << endl;
     ::database::Entry entry;
     if(type == "INT") {
         entry.set_num(a);
     } else if (type == "FLOAT") {
         entry.set_flt(b);
-    } else if (type == "BOOL") {
-        entry.set_str(c);
     } else if (type == "STRING") {
+        entry.set_str(c);
+    } else if (type == "BOOL") {
         entry.set_boolean(d);   
     }
     return entry;
@@ -80,6 +81,7 @@ int main() {
     table.insert(row1);
 
     // catch the bad row insertion
+    cout << "Checking bad_insertion test..." << endl;
     try {
         table.insert(bad_row);
     } catch (out_of_range) {
@@ -89,15 +91,16 @@ int main() {
     table.insert(row2);
     table.insert(row3);
     
-    /* Creating Table */
-
+    /* Table Created */
+    cout << "Finished Creating Table..." << endl;
 
     // Test Functionality
 
+    cout << "Starting Filter Tests..." << endl;
     /* Creating comparison columns and entries */
     vector<string> columns1 = {"float1", "string"};
     vector<string> columns2 = {"int", "string", "float2"};
-    vector<string> columns3 = {"bool"};
+    vector<string> columns3 = {"boolean"};
 
     vector<::database::Entry> comparisons1;
     comparisons1.push_back(make_entry(&table, "float1", 15, 11.2, "kfdk", false));
@@ -109,26 +112,27 @@ int main() {
     comparisons2.push_back(make_entry(&table, "float2", 15, 3.0, "poop", false));
 
     vector<::database::Entry> comparisons3;
-    comparisons2.push_back(make_entry(&table, "bool", 15, 3.0, "poop", true));
+    comparisons3.push_back(make_entry(&table, "boolean", 15, 3.0, "poop", true));
 
     vector<::database::Entry> comparisons4;
-    comparisons2.push_back(make_entry(&table, "bool", 15, 3.0, "poop", false));
+    comparisons4.push_back(make_entry(&table, "boolean", 15, 3.0, "poop", false));
     /* Created comparison columns and entries */
 
     /* Filter Tests */
+    cout << "Starting Filter Tests..." << endl;
     assert(table.filter(columns1, comparisons1).size() == 2);
-    assert(table.filter(columns1, comparisons1)[0].entries(2).flt() == 43.2);
+    assert(table.filter(columns1, comparisons1)[0].entries(2).flt() == 43.0);
     assert(table.filter(columns1, comparisons1)[1].entries(0).num() == 123);
-
+    
     assert(table.filter(columns2, comparisons2).size() == 1);
     assert(table.filter(columns2, comparisons2)[0].entries(0).num() == 1);
     assert(table.filter(columns2, comparisons2)[0].entries(4).boolean() == true);
-    assert(table.filter(columns2, comparisons2)[0].entries(1).flt() == 1.2);
+    assert((float)table.filter(columns2, comparisons2)[0].entries(1).flt() == (float)1.2);
 
     assert(table.filter(columns3, comparisons3).size() == 4);
     assert(table.filter(columns3, comparisons3)[0].entries(0).num() == 1);
     assert(table.filter(columns3, comparisons3)[0].entries(4).boolean() == true);
-    assert(table.filter(columns3, comparisons3)[0].entries(1).flt() == 1.2);
+    assert(table.filter(columns3, comparisons3)[0].entries(1).flt() == (float)1.2);
     assert(table.filter(columns3, comparisons3)[1].entries(0).num() == -8347);
     assert(table.filter(columns3, comparisons3)[2].entries(0).num() == 123);
     assert(table.filter(columns3, comparisons3)[3].entries(0).num() == -1);
@@ -139,6 +143,7 @@ int main() {
 
     /* Update Test */
     table.edit_rows(columns1, comparisons1, columns2, comparisons2);
+    cout << "Comparisons 2 size: " << table.filter(columns2, comparisons2).size() << endl;
     assert(table.filter(columns2, comparisons2).size() == 2);
     table.edit_rows(columns2, comparisons2, columns1, comparisons1);
     assert(table.filter(columns1, comparisons1).size() == 2);
