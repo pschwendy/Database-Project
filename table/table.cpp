@@ -4,7 +4,7 @@
 // Table.cpp
 //
 
-#include "Table.h"
+#include "table.h"
 #include <iostream>
 #include <exception>
 

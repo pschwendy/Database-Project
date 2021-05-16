@@ -4,7 +4,7 @@
 // table_test.cpp
 //
 
-#include "Table.h"
+#include "table.h"
 #include "protos/table.pb.h"
 #include <iostream>
 #include <cassert>
