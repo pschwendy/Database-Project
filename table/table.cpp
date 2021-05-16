@@ -24,6 +24,7 @@ Table::Table(vector<string> &columns, vector<string> &column_types, ::database::
     for(size_t i = 0; i < columns.size(); ++i) {
         Info info = Info(i, column_types[i]);
         column_indecies.emplace(columns[i], info);
+        // cout << columns[i] << endl;
     }
     table = input_table;
 } // Table()
@@ -36,6 +37,7 @@ Table::Table(vector<string> &columns, vector<string> &column_types) {
     for(size_t i = 0; i < columns.size(); ++i) {
         Info info = Info(i, column_types[i]);
         column_indecies.emplace(columns[i], info);
+        // cout << columns[i] << endl;
     }
 } // Table()
 
@@ -110,13 +112,15 @@ vector<::database::Row> Table::filter(string &column, ::database::Entry comparis
 vector<::database::Row> Table::filter(vector<string> &columns, vector<::database::Entry> &comparisons) {
     vector<::database::Row> subset;
     vector<Info> indecies;
+    
     for (string column: columns) {
+        // cout << column << endl;
         Info index;
         try {
             index = column_index(column);
         } catch (std::exception e) {
             // catch code
-            // throw()
+            throw e;
         }
         indecies.push_back(index);
     }
@@ -151,7 +155,7 @@ void Table::edit_rows(vector<string> &columns,
             indecies.push_back(index);
         } catch (std::exception e) {
             // catch code
-            // throw()
+            throw e;
         }
     }
     vector<Info> edit_indecies;
@@ -177,9 +181,10 @@ void Table::edit_rows(vector<string> &columns,
                 j = comparisons.size();
             }
         }
-        if(good == false) {
+        if(!good) {
             continue;
         }
+        cout << "...editing" << endl;
         for(size_t j = 0; j < comparisons.size(); ++j) {
             if(!correct_type(edit_indecies[j], entries[j])) {
                 // throw()
@@ -192,15 +197,21 @@ void Table::edit_rows(vector<string> &columns,
 
 void Table::insert(::database::Row &row) {
     for(auto it : column_indecies) {
-        if(!correct_type(it.second, row.entries(it.second.index))) {
+        try {
+            if(!correct_type(it.second, row.entries(it.second.index))) {
+                throw out_of_range("Row is wrong type");
+            }
+        } catch (exception e) {
             throw out_of_range("Row is wrong type");
         }
+        
     }
     ::database::Row* new_row = table.add_rows();
     *new_row = row;
 } // insert()
 
 string Table::get_type(string &column) {
+    //cout << column << endl;
     auto it = column_indecies.find(column);
     if(it == column_indecies.end()) {
         throw out_of_range("Column does not exist!");
@@ -224,6 +235,27 @@ string Table::get_type(string &column) {
 
     return type_str;
 }
+
+void Table::output() {
+    for(int i = 0; i < table.rows_size(); ++i) {
+        ::database::Row row = table.rows(i);
+        for(int j = 0; j < row.entries_size(); ++j) {
+            ::database::Entry entry = row.entries(j);
+            if(entry.has_str()) {
+                cout << entry.str();
+            } else if(entry.has_flt()) {
+                cout << entry.flt();
+            } else if(entry.has_num()) {
+                cout << entry.num();
+            } else if(entry.has_boolean()) {
+                cout << entry.boolean();
+            }
+            cout << " | ";
+        }
+        cout << endl;
+    }
+}
+
 /*************
  *  PRIVATE  *
  *************/
