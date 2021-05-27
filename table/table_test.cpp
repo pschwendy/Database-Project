@@ -48,7 +48,6 @@ using namespace std;
 
 ::database::Entry make_entry(Table* table, string column, int a, float b, string c, bool d) {
     string type = table->get_type(column);
-    cout << "TYPE " << type << endl;
     ::database::Entry entry;
     if(type == "INT") {
         entry.set_num(a);
@@ -96,7 +95,6 @@ int main() {
 
     // Test Functionality
 
-    cout << "Starting Filter Tests..." << endl;
     /* Creating comparison columns and entries */
     vector<string> columns1 = {"float1", "string"};
     vector<string> columns2 = {"int", "string", "float2"};
@@ -142,11 +140,21 @@ int main() {
     /* Passed Filter Tests */
 
     /* Update Test */
+    cout << "Starting Update Tests..." << endl;
     table.edit_rows(columns1, comparisons1, columns2, comparisons2);
-    cout << "Comparisons 2 size: " << table.filter(columns2, comparisons2).size() << endl;
-    assert(table.filter(columns2, comparisons2).size() == 2);
+    assert(table.filter(columns2, comparisons2).size() == 3);
+    assert(table.filter(columns2, comparisons2)[0].entries(2).flt() == 3.0);
+    assert(table.filter(columns2, comparisons2)[1].entries(1).flt() == (float)11.2);
+    assert(table.filter(columns2, comparisons2)[1].entries(3).str() == table.filter(columns2, comparisons2)[2].entries(3).str());
+    assert(table.filter(columns2, comparisons2)[1].entries(3).str() == "poop");
+
     table.edit_rows(columns2, comparisons2, columns1, comparisons1);
-    assert(table.filter(columns1, comparisons1).size() == 2);
+    assert(table.filter(columns1, comparisons1).size() == 3);
+    
+    
+    table.edit_rows(columns3, comparisons3, columns3, comparisons4);
+    assert(table.filter(columns1, comparisons1).size() == 3);
+    cout << "Passed Update Tests!" << endl;
     //table.edit_rows(columns3, comparisons3, )
 
 }

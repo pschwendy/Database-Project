@@ -184,13 +184,12 @@ void Table::edit_rows(vector<string> &columns,
         if(!good) {
             continue;
         }
-        cout << "...editing" << endl;
-        for(size_t j = 0; j < comparisons.size(); ++j) {
+        for(size_t j = 0; j < entries.size(); ++j) {
             if(!correct_type(edit_indecies[j], entries[j])) {
-                // throw()
+                // throw
             }
             ::database::Entry* edit_entry = table.mutable_rows(i)->mutable_entries(edit_indecies[j].index);
-            *edit_entry = entries[j];
+            edit_entry->CopyFrom(entries[j]);
         }
     }
 } // edit_rows()
@@ -254,6 +253,19 @@ void Table::output() {
         }
         cout << endl;
     }
+}
+
+void Table::output_entry(::database::Entry& entry) {
+    if(entry.has_str()) {
+        cout << entry.str();
+    } else if(entry.has_flt()) {
+        cout << entry.flt();
+    } else if(entry.has_num()) {
+        cout << entry.num();
+    } else if(entry.has_boolean()) {
+        cout << entry.boolean();
+    }
+    cout << endl;
 }
 
 /*************

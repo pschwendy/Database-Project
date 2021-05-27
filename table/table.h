@@ -76,6 +76,8 @@ class Table {
 
         void output();
 
+        void output_entry(::database::Entry& entry);
+
     private:
         struct Info {
             size_t index;
