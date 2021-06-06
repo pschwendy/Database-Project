@@ -1,7 +1,7 @@
 // Peter Schwendeman
 //
 //
-// Storage.h
+// storage.h
 //
 
 #ifndef Storage_h

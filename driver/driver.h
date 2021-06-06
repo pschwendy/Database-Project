@@ -1,7 +1,7 @@
 // Peter Schwendeman
 //
 //
-// Driver.h
+// driver.h
 //
 
 #ifndef Driver_h
@@ -22,6 +22,8 @@ class Driver {
 
     private:
         Database* db;
+
+        void parse_input(string &input);
 };
 
 #endif // Driver_h

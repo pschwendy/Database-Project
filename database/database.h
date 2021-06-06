@@ -1,7 +1,7 @@
 // Peter Schwendeman
 //
 //
-// Database.h
+// database.h
 //
 
 #ifndef Database_h

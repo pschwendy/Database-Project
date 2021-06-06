@@ -1,7 +1,7 @@
 // Peter Schwendeman
 //
 //
-// Database.cpp
+// database.cpp
 //
 
 #include "database.h"

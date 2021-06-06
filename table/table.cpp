@@ -1,7 +1,7 @@
 // Peter Schwendeman
 //
 //
-// Table.cpp
+// table.cpp
 //
 
 #include "table.h"

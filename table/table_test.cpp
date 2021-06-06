@@ -64,7 +64,7 @@ using namespace std;
 int main() {
     /* Creating Table */
     
-    ::database::Row row = make_row(1, 0, 1.2, 3.0, "poop", "", true);
+    ::database::Row row = make_row(1, 0, 1.2, 3.0, "friend", "", true);
     ::database::Row row1 = make_row(-8347, 0, 11.2, 43.0, "hello", "", true);
     ::database::Row row2 = make_row(123, 0, 11.2, -12.0, "hello", "", true);
     ::database::Row row3 = make_row(-1, 0,  -298.2, 3.2, "nah", "", true);
@@ -106,14 +106,14 @@ int main() {
 
     vector<::database::Entry> comparisons2;
     comparisons2.push_back(make_entry(&table, "int", 1, 11.2, "kfdk", false));
-    comparisons2.push_back(make_entry(&table, "string", 15, 11.2, "poop", false));
-    comparisons2.push_back(make_entry(&table, "float2", 15, 3.0, "poop", false));
+    comparisons2.push_back(make_entry(&table, "string", 15, 11.2, "friend", false));
+    comparisons2.push_back(make_entry(&table, "float2", 15, 3.0, "friend", false));
 
     vector<::database::Entry> comparisons3;
-    comparisons3.push_back(make_entry(&table, "boolean", 15, 3.0, "poop", true));
+    comparisons3.push_back(make_entry(&table, "boolean", 15, 3.0, "friend", true));
 
     vector<::database::Entry> comparisons4;
-    comparisons4.push_back(make_entry(&table, "boolean", 15, 3.0, "poop", false));
+    comparisons4.push_back(make_entry(&table, "boolean", 15, 3.0, "friend", false));
     /* Created comparison columns and entries */
 
     /* Filter Tests */
@@ -141,20 +141,21 @@ int main() {
 
     /* Update Test */
     cout << "Starting Update Tests..." << endl;
+    
     table.edit_rows(columns1, comparisons1, columns2, comparisons2);
     assert(table.filter(columns2, comparisons2).size() == 3);
     assert(table.filter(columns2, comparisons2)[0].entries(2).flt() == 3.0);
-    assert(table.filter(columns2, comparisons2)[1].entries(1).flt() == (float)11.2);
+    assert(table.filter(columns2, comparisons2)[0].entries(1).flt() == (float)11.2);
     assert(table.filter(columns2, comparisons2)[1].entries(3).str() == table.filter(columns2, comparisons2)[2].entries(3).str());
-    assert(table.filter(columns2, comparisons2)[1].entries(3).str() == "poop");
+    assert(table.filter(columns2, comparisons2)[1].entries(3).str() == "friend");
 
     table.edit_rows(columns2, comparisons2, columns1, comparisons1);
     assert(table.filter(columns1, comparisons1).size() == 3);
-    
+    assert(table.filter(columns1, comparisons1)[0].entries(2).flt() == (float)3.0);
+    assert(table.filter(columns1, comparisons1)[0].entries(0).num() == 1);
     
     table.edit_rows(columns3, comparisons3, columns3, comparisons4);
     assert(table.filter(columns1, comparisons1).size() == 3);
+    
     cout << "Passed Update Tests!" << endl;
-    //table.edit_rows(columns3, comparisons3, )
-
 }
