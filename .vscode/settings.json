@@ -28,7 +28,8 @@
         "string_view": "cpp",
         "unordered_set": "cpp",
         "stdexcept": "cpp",
-        "ios": "cpp"
+        "ios": "cpp",
+        "cassert": "cpp"
     },
     "C_Cpp.errorSquiggles": "Disabled"
 }

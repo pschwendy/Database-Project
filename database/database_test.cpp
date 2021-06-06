@@ -4,62 +4,13 @@
 // table_test.cpp
 //
 
-#include "table.h"
+#include "database.h"
+#include "table_test.h"
 #include "protos/table.pb.h"
 #include <iostream>
 #include <cassert>
 
 using namespace std;
-
-::database::Row make_row(int x = 0, int x1 = 0, float y = 0, float y1 = 0, string str = "", string str1 = "", bool b = false) {
-    ::database::Row entries;
-    
-    if(x != 0) {
-        ::database::Entry *entry = entries.add_entries();
-        entry->set_num(x);
-    }
-    if(x1 != 0) {
-        ::database::Entry *entry1 = entries.add_entries();
-        entry1->set_num(x1);
-    }
-    if(y != 0) {
-        ::database::Entry *entry2 = entries.add_entries();
-        entry2->set_flt(y);
-    }
-    if(y1 != 0) {
-        ::database::Entry *entry3 = entries.add_entries();
-        entry3->set_flt(y1);
-    }
-    if(str != "") {
-        ::database::Entry *entry4 = entries.add_entries();
-        entry4->set_str(str);
-    }
-    if(str1 != "") {
-        ::database::Entry *entry5 = entries.add_entries();
-        entry5->set_str(str1);
-    }
-    if(b) {
-        ::database::Entry *entry6 = entries.add_entries();
-        entry6->set_boolean(b);
-    }
-    
-    return entries;
-}
-
-::database::Entry make_entry(Table* table, string column, int a, float b, string c, bool d) {
-    string type = table->get_type(column);
-    ::database::Entry entry;
-    if(type == "INT") {
-        entry.set_num(a);
-    } else if (type == "FLOAT") {
-        entry.set_flt(b);
-    } else if (type == "STRING") {
-        entry.set_str(c);
-    } else if (type == "BOOL") {
-        entry.set_boolean(d);   
-    }
-    return entry;
-}
 
 Table create_table1() {
     ::database::Row row = make_row(1, 0, 1.2, 3.0, "friend", "", true);
