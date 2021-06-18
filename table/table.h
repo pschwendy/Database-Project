@@ -43,12 +43,6 @@ class Table {
         ::database::Row get_row(string &column, 
                                     ::database::Entry comparison);
 
-        // Filters and returns rows where Entry@column = comparison
-        // Input: string column -> column accessing
-        // Input: Entry comparison -> entry to compare row entry to
-        vector<::database::Row> filter(string &column, 
-                                        ::database::Entry comparison);
-
         // Filters and returns rows where each Entry@each column = the said comparison
         // Input: vector<string> columns -> columns being accessed
         // Input: vector<Entry> comparisons -> list of entries to compare each row entry@column to
@@ -66,16 +60,27 @@ class Table {
                         vector<string> &edit_columns, 
                         vector<::database::Entry> &entries);
 
+        // Edits all rows to set entry@each edit_column = the said new entry
+        // Input: vector<string> &edit_columns -> columns being edited in filtered entries
+        // Input: vector<::database::Entry> &entries -> new entries to update entries in edit_columns
+        void edit_all(vector<string> &edit_columns, 
+                        vector<::database::Entry> &entries);
+
         // Inserts row into database
         // Checks if row aligns with correct types
         // Input: ::database::row &row -> row being inserted
         void insert(::database::Row &row);
         
-        // Deletes rows where each entry@each column = the said comparison
+        // Removes rows where each entry@each column = the said comparison
         // Input: vector<string> columns -> columns being accessed
         // Input: vector<Entry> comparisons -> list of entries to compare each row entry@column to
-        void delete_rows(vector<string> &columns, 
-                                        vector<::database::Entry> &comparisons);
+        void remove_rows(vector<string> &columns, 
+                            vector<::database::Entry> &comparisons);
+        
+        // Removes all rows in table
+        void remove_all() {
+            table.mutable_rows()->erase(table.mutable_rows()->begin(), table.mutable_rows()->begin() + table.rows_size());
+        }
 
         // Serializes table to ostream
         // Input: ostream* out -> output ostream

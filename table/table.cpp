@@ -83,25 +83,6 @@ string Table::schema() {
     throw out_of_range("No row found");
 } // get_row()
 
-// Filters and returns rows where Entry@column = comparison
-// Input: string column -> column accessing
-// Input: Entry comparison -> entry to compare row entry to
-vector<::database::Row> Table::filter(string &column, ::database::Entry comparison) {
-    vector<::database::Row> subset;
-    Info index;
-    try {
-        index = column_index(column);
-    } catch (std::exception e) {
-        throw e;
-    }
-    for(size_t i = 0; i < table.rows_size(); ++i) {
-        if(compare_entries(table.rows(i).entries(index.index), comparison)) {
-            subset.emplace_back(table.rows(i));
-        }
-    }
-    return subset;
-} // filter() 1
-
 // Filters and returns rows where each Entry@each column = the said comparison
 // Input: vector<string> columns -> columns being accessed
 // Input: vector<Entry> comparisons -> list of entries to compare each row entry@column to
@@ -175,6 +156,33 @@ void Table::edit_rows(vector<string> &columns,
     }
 } // edit_rows()
 
+// Edits all rows to set entry@each edit_column = the said new entry
+// Input: vector<string> &edit_columns -> columns being edited in filtered entries
+// Input: vector<::database::Entry> &entries -> new entries to update entries in edit_columns
+void Table::edit_all(vector<string> &edit_columns, 
+                vector<::database::Entry> &entries) {
+    vector<Info> edit_indecies;
+    for (string column: edit_columns) {
+        try {
+            Info index = column_index(column);
+            edit_indecies.push_back(index);
+        } catch (std::exception e) {
+            throw e;
+        }
+    }
+
+    for(size_t i = 0; i < table.rows_size(); ++i) {
+        // Edits each specified entry in row
+        for(size_t j = 0; j < entries.size(); ++j) {
+            if(!correct_type(edit_indecies[j], entries[j])) {
+                throw type_mismatch(type_mismatch::error_type::updation, get_type(edit_indecies[j]), get_type(entries[j]));
+            }
+            ::database::Entry* edit_entry = table.mutable_rows(i)->mutable_entries(edit_indecies[j].index);
+            edit_entry->CopyFrom(entries[j]);
+        }
+    }
+}
+
 // Inserts row into database
 // Checks if row aligns with correct types
 // Input: ::database::row &row -> row being inserted
@@ -193,10 +201,10 @@ void Table::insert(::database::Row &row) {
     *new_row = row;
 } // insert()
 
-// Deletes rows where each entry@each column = the said comparison
+// Removes rows where each entry@each column = the said comparison
 // Input: vector<string> columns -> columns being accessed
 // Input: vector<Entry> comparisons -> list of entries to compare each row entry@column to
-void Table::delete_rows(vector<string> &columns, vector<::database::Entry> &comparisons) {
+void Table::remove_rows(vector<string> &columns, vector<::database::Entry> &comparisons) {
     vector<Info> indecies;
     
     for (string column: columns) {

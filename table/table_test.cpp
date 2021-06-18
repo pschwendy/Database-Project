@@ -165,7 +165,7 @@ int main() {
     /* Deletion Tests */
     cout << "Starting Deletion Tests..." << endl;
     
-    table.delete_rows(columns3, comparisons3);
+    table.remove_rows(columns3, comparisons3);
     assert(table.filter(columns3, comparisons3).size() == 0);
 
     cout << "Passed Deletion Tests!" << endl;
