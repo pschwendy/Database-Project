@@ -156,7 +156,7 @@ void Table::edit_rows(vector<string> &columns,
         }
     }
 
-    // Loops through rows and edits the ones that are 
+    // Loops through rows and edits the ones that fit comparisons
     for(size_t i = 0; i < table.rows_size(); ++i) {
         bool good = check_row(table.rows(i), indecies, comparisons);
 
@@ -164,7 +164,7 @@ void Table::edit_rows(vector<string> &columns,
             continue;
         }
 
-        // Edits each entry 
+        // Edits each specified entry in row
         for(size_t j = 0; j < entries.size(); ++j) {
             if(!correct_type(edit_indecies[j], entries[j])) {
                 throw type_mismatch(type_mismatch::error_type::updation, get_type(edit_indecies[j]), get_type(entries[j]));
@@ -382,6 +382,5 @@ string Table::get_type(::database::Entry entry) {
     } else if(entry.has_str()) {
         return "STRING";
     }
-
     return "NO TYPE";
 } // get_type()
