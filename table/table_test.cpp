@@ -79,19 +79,22 @@ int main() {
     table.insert(row);
     table.insert(row1);
 
-    // catch the bad row insertion
-    cout << "Checking bad_insertion test..." << endl;
+    // Catch the bad row insertion
+    cout << "Checking Bad Insertion Test..." << endl;
+    
     try {
         table.insert(bad_row);
-    } catch (out_of_range) {
-        cout << "PASSED BAD INSERTION TEST" << endl;
+    } catch (out_of_range e) {
+        cout << e.what() << endl;
     }
-    
+
+    cout << "Passed Bad Insertion Test!" << endl;
+
     table.insert(row2);
     table.insert(row3);
     
     /* Table Created */
-    cout << "Finished Creating Table..." << endl;
+    cout << "---Finished Creating Table---" << endl;
 
     // Test Functionality
 
@@ -141,11 +144,10 @@ int main() {
 
     /* Update Test */
     cout << "Starting Update Tests..." << endl;
-    
     table.edit_rows(columns1, comparisons1, columns2, comparisons2);
     assert(table.filter(columns2, comparisons2).size() == 3);
     assert(table.filter(columns2, comparisons2)[0].entries(2).flt() == 3.0);
-    assert(table.filter(columns2, comparisons2)[0].entries(1).flt() == (float)11.2);
+    assert(table.filter(columns2, comparisons2)[1].entries(1).flt() == (float)11.2);
     assert(table.filter(columns2, comparisons2)[1].entries(3).str() == table.filter(columns2, comparisons2)[2].entries(3).str());
     assert(table.filter(columns2, comparisons2)[1].entries(3).str() == "friend");
 
@@ -155,7 +157,17 @@ int main() {
     assert(table.filter(columns1, comparisons1)[0].entries(0).num() == 1);
     
     table.edit_rows(columns3, comparisons3, columns3, comparisons4);
-    assert(table.filter(columns1, comparisons1).size() == 3);
+    assert(table.filter(columns3, comparisons4).size() == 4);
     
     cout << "Passed Update Tests!" << endl;
+    /* Passed Update Tests */
+
+    /* Deletion Tests */
+    cout << "Starting Deletion Tests..." << endl;
+    
+    table.delete_rows(columns3, comparisons3);
+    assert(table.filter(columns3, comparisons3).size() == 0);
+
+    cout << "Passed Deletion Tests!" << endl;
+    /* Passed Deletion Tests */
 }
