@@ -8,7 +8,7 @@
 #include <iostream>
 #include <exception>
 #include <sstream>
-
+#include <queue>
 using namespace std;
 
 /************
@@ -70,11 +70,7 @@ string Table::schema() {
 // Input: Entry comparison -> entry to compare row entry to
 ::database::Row Table::get_row(string &column, ::database::Entry comparison) {
     Info index;
-    try {
-        index = column_index(column);
-    } catch (std::exception e) {
-        throw e;
-    }
+    index = column_index(column);
     for(size_t i = 0; i < table.rows_size(); ++i) {
         if(compare_entries(table.rows(i).entries(index.index), comparison)) {
             return table.rows(i);
@@ -90,13 +86,9 @@ vector<::database::Row> Table::filter(vector<string> &columns, vector<::database
     vector<::database::Row> subset;
     vector<Info> indecies;
     
-    for (string column: columns) {
+    for (string column : columns) {
         Info index;
-        try {
-            index = column_index(column);
-        } catch (std::exception e) {
-            throw e;
-        }
+        index = column_index(column);
         indecies.push_back(index);
     }
     for(size_t i = 0; i < table.rows_size(); ++i) {
@@ -119,24 +111,17 @@ void Table::edit_rows(vector<string> &columns,
                         vector<string> &edit_columns, 
                         vector<::database::Entry> &entries) {
     vector<Info> indecies;
-    for (string column: columns) {
-        try {
-            Info index = column_index(column);
-            indecies.push_back(index);
-        } catch (std::exception e) {
-            throw e;
-        }
+    for (string column : columns) {
+        Info index = column_index(column);
+        indecies.push_back(index);
     }
     vector<Info> edit_indecies;
-    for (string column: edit_columns) {
-        try {
-            Info index = column_index(column);
-            edit_indecies.push_back(index);
-        } catch (std::exception e) {
-            throw e;
-        }
+    for (string column : edit_columns) {
+        Info index = column_index(column);
+        edit_indecies.push_back(index);
     }
 
+    queue<size_t> edit_row_indecies;
     // Loops through rows and edits the ones that fit comparisons
     for(size_t i = 0; i < table.rows_size(); ++i) {
         bool good = check_row(table.rows(i), indecies, comparisons);
@@ -150,7 +135,18 @@ void Table::edit_rows(vector<string> &columns,
             if(!correct_type(edit_indecies[j], entries[j])) {
                 throw type_mismatch(type_mismatch::error_type::updation, get_type(edit_indecies[j]), get_type(entries[j]));
             }
-            ::database::Entry* edit_entry = table.mutable_rows(i)->mutable_entries(edit_indecies[j].index);
+        }
+        edit_row_indecies.push(i);
+    }
+
+    // Loops through rows and edits the ones that fit comparisons
+    while(!edit_row_indecies.empty()) {
+        size_t index = edit_row_indecies.front();
+        edit_row_indecies.pop();
+
+        // Edits each specified entry in row
+        for(size_t j = 0; j < entries.size(); ++j) {
+            ::database::Entry* edit_entry = table.mutable_rows(index)->mutable_entries(edit_indecies[j].index);
             edit_entry->CopyFrom(entries[j]);
         }
     }
@@ -162,13 +158,9 @@ void Table::edit_rows(vector<string> &columns,
 void Table::edit_all(vector<string> &edit_columns, 
                 vector<::database::Entry> &entries) {
     vector<Info> edit_indecies;
-    for (string column: edit_columns) {
-        try {
-            Info index = column_index(column);
-            edit_indecies.push_back(index);
-        } catch (std::exception e) {
-            throw e;
-        }
+    for (string column : edit_columns) {
+        Info index = column_index(column);
+        edit_indecies.push_back(index);
     }
 
     for(size_t i = 0; i < table.rows_size(); ++i) {
@@ -207,13 +199,9 @@ void Table::insert(::database::Row &row) {
 void Table::remove_rows(vector<string> &columns, vector<::database::Entry> &comparisons) {
     vector<Info> indecies;
     
-    for (string column: columns) {
+    for (string column : columns) {
         Info index;
-        try {
-            index = column_index(column);
-        } catch (std::exception e) {
-            throw e;
-        }
+        index = column_index(column);
         indecies.push_back(index);
     }
 

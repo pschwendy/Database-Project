@@ -29,7 +29,9 @@
         "unordered_set": "cpp",
         "stdexcept": "cpp",
         "ios": "cpp",
-        "cassert": "cpp"
+        "cassert": "cpp",
+        "*.inc": "cpp",
+        "chrono": "cpp"
     },
     "C_Cpp.errorSquiggles": "Disabled"
 }

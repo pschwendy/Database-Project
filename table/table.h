@@ -102,9 +102,9 @@ class Table {
         // Error caused by mismatch between column and entry through comparison, insertion, or updation
         struct type_mismatch : public std::exception {
             enum error_type {
-                comparison = 0,
-                insertion = 1,
-                updation = 2
+                COMPARISON = 0,
+                INSERTION = 1,
+                UPDATION = 2
             };
             string error_message;
 
@@ -114,15 +114,15 @@ class Table {
             // Input: string entry_type -> datatype of entry being mismatched
             type_mismatch(error_type e_type, string column_type, string entry_type) {
                 switch (e_type) {
-                    case 0:
+                    case COMPARISON:
                         error_message = "ERROR: Type Mismatch - Trying to compare Entry of type '" + entry_type + "' into Column of type '" + column_type + "'";
                         break;
                     
-                    case 1:
+                    case INSERTION:
                         error_message = "ERROR: Type Mismatch - Trying to insert Entry of type '" + entry_type + "' into Column of type '" + column_type + "'";
                         break;
 
-                    case 2:
+                    case UPDATION:
                         error_message = "ERROR: Type Mismatch - Trying to update Column of type '" + column_type + "' with Entry of type '" + entry_type + "'";
                         break;
 
