@@ -91,6 +91,7 @@ vector<::database::Row> Table::filter(vector<string> &columns, vector<::database
         index = column_index(column);
         indecies.push_back(index);
     }
+
     for(size_t i = 0; i < table.rows_size(); ++i) {
         bool good = check_row(table.rows(i), indecies, comparisons);
         if(good) {
@@ -98,7 +99,7 @@ vector<::database::Row> Table::filter(vector<string> &columns, vector<::database
         }
     }
     return subset;
-} // filter() 2
+} // filter()
 
 // Finds and edits rows where each entry@each column = the said comparison
 // Changes rows to set entry@each edit_column = the said new entry
@@ -133,7 +134,7 @@ void Table::edit_rows(vector<string> &columns,
         // Edits each specified entry in row
         for(size_t j = 0; j < entries.size(); ++j) {
             if(!correct_type(edit_indecies[j], entries[j])) {
-                throw type_mismatch(type_mismatch::error_type::updation, get_type(edit_indecies[j]), get_type(entries[j]));
+                throw type_mismatch(type_mismatch::error_type::UPDATION, get_type(edit_indecies[j]), get_type(entries[j]));
             }
         }
         edit_row_indecies.push(i);
@@ -167,7 +168,7 @@ void Table::edit_all(vector<string> &edit_columns,
         // Edits each specified entry in row
         for(size_t j = 0; j < entries.size(); ++j) {
             if(!correct_type(edit_indecies[j], entries[j])) {
-                throw type_mismatch(type_mismatch::error_type::updation, get_type(edit_indecies[j]), get_type(entries[j]));
+                throw type_mismatch(type_mismatch::error_type::UPDATION, get_type(edit_indecies[j]), get_type(entries[j]));
             }
             ::database::Entry* edit_entry = table.mutable_rows(i)->mutable_entries(edit_indecies[j].index);
             edit_entry->CopyFrom(entries[j]);
@@ -185,8 +186,7 @@ void Table::insert(::database::Row &row) {
             error_message << "ERROR: Row being inserted is too small! Row has " << row.entries_size() << " entries, when it is supposed to have " << column_indecies.size();
             throw out_of_range(error_message.str());
         } else if(!correct_type(it.second, row.entries(it.second.index))) {
-            cout << "Throwing type mismatch" << endl;
-            throw type_mismatch(type_mismatch::error_type::insertion, get_type(row.entries(it.second.index)), get_type(it.second));
+            throw type_mismatch(type_mismatch::error_type::INSERTION, get_type(row.entries(it.second.index)), get_type(it.second));
         }
     }
     ::database::Row* new_row = table.add_rows();
@@ -307,7 +307,7 @@ bool Table::check_row(const ::database::Row &row, vector<Info> indecies, vector<
     for(size_t j = 0; j < comparisons.size(); ++j) {
         bool correct_comparison = correct_type(indecies[j], comparisons[j]);
         if(!correct_comparison) {
-            throw type_mismatch(type_mismatch::error_type::comparison, get_type(indecies[j]), get_type(comparisons[j]));
+            throw type_mismatch(type_mismatch::error_type::COMPARISON, get_type(indecies[j]), get_type(comparisons[j]));
         }
         
         if(!compare_entries(row.entries(indecies[j].index), comparisons[j])) {
