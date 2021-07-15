@@ -126,7 +126,6 @@ void Table::edit_rows(vector<string> &columns,
     // Loops through rows and edits the ones that fit comparisons
     for(size_t i = 0; i < table.rows_size(); ++i) {
         bool good = check_row(table.rows(i), indecies, comparisons);
-
         if(!good) {
             continue;
         }

@@ -23,25 +23,24 @@ void filter_test_on_empty_table(Table &table);
 void filter_test_no_rows_found(Table &table);
 void filter_test_type_mismatch(Table &table);
 
-void edit_test_standard(Table &table);
-void edit_test_on_empty_table(Table &table);
-void edit_test_no_rows_found(Table &table);
-void edit_all_test(Table &table);
-void edit_test_type_mismatch(Table &table);
+void edit_test_standard(Table table);
+void edit_test_on_empty_table(Table table);
+void edit_test_no_rows_found(Table table);
+void edit_all_test(Table table);
+void edit_test_type_mismatch(Table table);
 
-void deletion_test_standard(Table &table);
-void deletion_test_on_empty_table(Table &table);
-void deletion_test_no_rows_found(Table &table);
-void deletion_test_type_mismatch(Table &table);
-void delete_all_test(Table &table);
+void deletion_test_standard(Table table);
+void deletion_test_type_mismatch(Table table);
+void remove_all_test(Table table);
 
 int main() {
     /* Creating Table */
     
-    ::database::Row row = make_row(1, 0, 1.2f, 3.0f, "friend", "", true);
-    ::database::Row row1 = make_row(-8347, 0, 11.2f, 43.0f, "hello", "", true);
-    ::database::Row row2 = make_row(123, 0, 11.2f, -12.0f, "hello", "", true);
-    ::database::Row row3 = make_row(-1, 0,  -298.2f, 3.2f, "nah", "", true);
+    ::database::Row row1 = make_row(1, 0, 1.2f, 3.0f, "friend", "", true);
+    ::database::Row row2 = make_row(-8347, 0, 11.2f, 43.0f, "hello", "", true);
+    ::database::Row row3 = make_row(123, 0, 11.2f, -12.0f, "hello", "", true);
+    ::database::Row row4 = make_row(-1, 0,  -298.2f, 3.2f, "nah", "", true);
+    ::database::Row row5 = make_row(20, 0,  11.2f, -1.2f, "abcdef", "", false);
     
     vector<string> columns = {"int", "float1", "float2", "string", "boolean"};
     vector<string> types = {"int", "float", "float", "string", "bool"};
@@ -49,16 +48,17 @@ int main() {
     Table table = Table(columns, types);
     Table empty_table = Table(columns, types);
 
-    table.insert(row);
     table.insert(row1);
+    table.insert(row2);
 
     cout << "---Starting Insertion Tests---" << endl;
     bad_insertion_test_wrong_size(table);
     bad_insertion_test_type_mismatch(table);
     cout << "---Passed Insertion Tests!---" << endl;
 
-    table.insert(row2);
     table.insert(row3);
+    table.insert(row4);
+    table.insert(row5);
     
     /* --- Table Created ---
         1 | 1.2 | 3.0 | friend | true
@@ -77,6 +77,22 @@ int main() {
     filter_test_no_rows_found(table);
     filter_test_type_mismatch(table);
     cout << "---Passed Filter Tests---" << endl;
+
+    // Filter Tests
+    cout << "---Starting Edit Tests---" << endl;
+    edit_test_standard(table);
+    edit_test_on_empty_table(empty_table);
+    edit_test_no_rows_found(table);
+    edit_test_type_mismatch(table);
+    edit_all_test(table);
+    cout << "---Passed Edit Tests---" << endl;
+
+    // Delete Tests
+    cout << "---Starting Delete Tests---" << endl;
+    deletion_test_standard(table);
+    deletion_test_type_mismatch(table);
+    remove_all_test(table);
+    cout << "---Passed Delete Tests---" << endl;
 }
 
 ::database::Row make_row(int x, int x1, float y, float y1, string str, string str1, bool b) {
@@ -106,10 +122,9 @@ int main() {
         ::database::Entry *entry5 = entries.add_entries();
         entry5->set_str(str1);
     }
-    if(b) {
-        ::database::Entry *entry6 = entries.add_entries();
-        entry6->set_boolean(b);
-    }
+    ::database::Entry *entry6 = entries.add_entries();
+    entry6->set_boolean(b);
+
     
     return entries;
 }
@@ -130,10 +145,7 @@ int main() {
 }
 
 void bad_insertion_test_wrong_size(Table &table) {
-    // Catch the bad row insertion
-    
-    
-    // row shouldn't be pushable
+    // Row shouldn't be pushable
     ::database::Row bad_row = make_row(0, 0, -298.2f, 3.2f, "", "", true);
     
     try {
@@ -141,8 +153,6 @@ void bad_insertion_test_wrong_size(Table &table) {
     } catch (out_of_range e) {
         cout << e.what() << endl;
     }
-
-    
 }
 
 void bad_insertion_test_type_mismatch(Table &table) {
@@ -285,13 +295,13 @@ void filter_test_on_empty_table(Table &table) {
 void filter_test_no_rows_found(Table &table) {
     // Arranging Test
     // Setting up column lists for filters
-    vector<string> columns1 = {"boolean"};
+    vector<string> columns1 = {"float1"};
 
     // Setting up lists of entries to compare each entry at the corresponding column to
     /* --- Columns 1, Comparisons 1 ---
         boolean: false                   */
     vector<::database::Entry> comparisons1;
-    comparisons1.push_back(make_entry(&table, "boolean", 15, 3.0, "friend", false));
+    comparisons1.push_back(make_entry(&table, "float1", 15, 132.f, "friend", false));
 
     size_t size1 = table.filter(columns1, comparisons1).size();
 
@@ -329,28 +339,292 @@ void filter_test_type_mismatch(Table &table) {
 }
 
 // Stardard tests for the edit method
-void edit_test_standard(Table &table) {
-    /*cout << "Starting Update Tests..." << endl;
-    
-    vector<string> columns1 = {"float1", "string"};
-    vector<string> columns2 = {"int", "string", "float2"};
-    vector<string> columns3 = {"boolean"};
+void edit_test_standard(Table table) {
+    vector<string> compare_columns = {"float1", "string"};
+    vector<string> edit_columns = {"float1", "int", "string"};
 
+    // Setting up lists of entries to compare each entry at the corresponding column to
+    /* --- Columns 1, Comparisons 1 ---
+        float1: 11.2
+        string: hello                    */
+    vector<::database::Entry> comparisons;
+    comparisons.push_back(make_entry(&table, "float1", 15, 11.2, "kfdk", false));
+    comparisons.push_back(make_entry(&table, "string", 15, 11.2, "hello", false));
 
-    table.edit_rows(columns1, comparisons1, columns2, comparisons2);
-    assert(table.filter(columns2, comparisons2).size() == 3);
-    assert(table.filter(columns2, comparisons2)[0].entries(2).flt() == 3.0);
-    assert(table.filter(columns2, comparisons2)[1].entries(1).flt() == 11.2f);
-    assert(table.filter(columns2, comparisons2)[1].entries(3).str() == table.filter(columns2, comparisons2)[2].entries(3).str());
-    assert(table.filter(columns2, comparisons2)[1].entries(3).str() == "friend");
+    // Setting up lists of entries to compare each entry at the corresponding column to
+    /* --- Columns 1, Comparisons 1 ---
+        float1: 11.2
+        string: hello                    */
+    vector<::database::Entry> updations;
+    updations.push_back(make_entry(&table, "float1", 15, -7.6f, "kfdk", false));
+    updations.push_back(make_entry(&table, "int", 27, 11.2, "hello", false));
+    updations.push_back(make_entry(&table, "string", 15, -22.1, "no", false));
 
-    table.edit_rows(columns2, comparisons2, columns1, comparisons1);
-    assert(table.filter(columns1, comparisons1).size() == 3);
-    assert(table.filter(columns1, comparisons1)[0].entries(2).flt() == 3.0f);
-    assert(table.filter(columns1, comparisons1)[0].entries(0).num() == 1);
+    table.edit_rows(compare_columns, comparisons, edit_columns, updations);
+
+    vector <::database::Row> filtered_rows = table.filter(edit_columns, updations);
+    size_t size = filtered_rows.size();
+    float first_row_float2 = filtered_rows[0].entries(2).flt(); 
+    float second_row_float2 = filtered_rows[1].entries(2).flt(); 
+    float second_row_float1 = filtered_rows[1].entries(1).flt();
+    string first_row_string = filtered_rows[0].entries(3).str(); 
+    string second_row_string = filtered_rows[1].entries(3).str();
+    int first_row_int = filtered_rows[0].entries(0).num();
+    bool second_row_bool = filtered_rows[1].entries(4).boolean();
     
-    table.edit_rows(columns3, comparisons3, columns3, comparisons4);
-    assert(table.filter(columns3, comparisons4).size() == 4);
+    assert(size == 2);
+    assert(first_row_float2 != second_row_float2);
+    assert(second_row_float2 == -12.f);
+    assert(second_row_float1 == -7.6f);
+    assert(first_row_string == "no");
+    assert(first_row_string == second_row_string);
+    assert(first_row_int == 27);
+    assert(second_row_bool == true);
+}
+
+void edit_test_on_empty_table(Table table) {
+    // Arranging Test
+    // Setting up column lists for filters
+    vector<string> compare_columns = {"float1", "string"};
+    vector<string> edit_columns = {"boolean"};
+
+    // Setting up lists of entries to compare each entry at the corresponding column to
+    /* --- compare_columns, comparisons ---
+        float1: 11.2
+        string: hello                    */
+    vector<::database::Entry> comparisons;
+    comparisons.push_back(make_entry(&table, "float1", 15, 11.2, "kfdk", false));
+    comparisons.push_back(make_entry(&table, "string", 15, 11.2, "hello", false));
+
+    /* --- Columns 3, Comparisons 3 ---
+        boolean: false                   */
+    vector<::database::Entry> updations;
+    updations.push_back(make_entry(&table, "boolean", 15, 3.0, "friend", false));
+
+    table.edit_rows(compare_columns, comparisons, edit_columns, updations);
     
-    cout << "Passed Update Tests!" << endl;*/
+    size_t size1 = table.filter(edit_columns, updations).size();
+    size_t size2 = table.filter(compare_columns, comparisons).size();
+
+    assert(size1 == 0);
+    assert(size2 == 0);
+}
+
+void edit_all_test(Table table) {
+    vector<string> edit_columns = {"float1", "int"};
+    
+    // Setting up lists of entries to compare each entry at the corresponding column to
+    /* --- Columns 1, Comparisons 1 ---
+        float1: 11.2
+        string: hello                    */
+    vector<::database::Entry> updations;
+    updations.push_back(make_entry(&table, "float1", 15, 82.f, "kfdk", false));
+    updations.push_back(make_entry(&table, "int", 52, 11.2, "hello", false));
+
+    table.edit_all(edit_columns, updations);
+
+    vector<::database::Row> edited_rows = table.filter(edit_columns, updations);
+
+    size_t size = edited_rows.size();
+    int row1_int = edited_rows[0].entries(0).num();
+    int row3_int = edited_rows[2].entries(0).num();
+    int row4_int = edited_rows[3].entries(0).num();
+    float row4_float2 = edited_rows[3].entries(2).flt();
+    float row3_float2 = edited_rows[2].entries(2).flt();
+    float row2_float1 = edited_rows[1].entries(1).flt();
+    string row3_string = edited_rows[2].entries(3).str();
+    bool row1_bool = edited_rows[0].entries(4).boolean();
+    string row1_string = edited_rows[0].entries(3).str();
+
+    assert(size == 5);
+    assert(row1_int == row4_int);
+    assert(row3_int == 52);
+    assert(row1_int == 52);
+    assert(row4_float2 == 3.2f);
+    assert(row3_float2 == -12.f);
+    assert(row2_float1 == 82.f);
+    assert(row3_string == "hello");
+    assert(row1_bool == true);
+    assert(row1_string == "friend");
+}
+
+void edit_test_no_rows_found(Table table) {
+    // Arranging Test
+    // Setting up column and comparison lists for filters
+    vector<string> compare_columns = {"float1"};
+
+    // Setting up lists of entries to compare each entry at the corresponding column to
+    /* --- Columns 1, Comparisons 1 ---
+        boolean: false                   */
+    vector<::database::Entry> comparisons;
+    comparisons.push_back(make_entry(&table, "float1", 15, 132.f, "friend", false));
+
+    vector<string> edit_columns = {"float1", "int"};
+    
+    // Setting up lists of entries to compare each entry at the corresponding column to
+    /* --- Columns 1, Comparisons 1 ---
+        float1: 11.2
+        string: hello                    */
+    vector<::database::Entry> updations;
+    updations.push_back(make_entry(&table, "float1", 15, 82.f, "kfdk", false));
+    updations.push_back(make_entry(&table, "int", 52, 11.2, "hello", false));
+
+    table.edit_rows(compare_columns, comparisons, edit_columns, updations);
+    size_t size = table.filter(edit_columns, updations).size();
+
+    assert(size == 0);
+}
+
+void edit_test_type_mismatch(Table table) {
+    // Arranging Test
+    // Setting up column and comparison lists for filters
+    vector<string> compare_columns = {"boolean"};
+    ::database::Entry fake_bool_entry;
+    fake_bool_entry.set_num(23);
+    vector<::database::Entry> fake_comparisons = {fake_bool_entry};
+    
+    ::database::Entry real_bool_entry;
+    real_bool_entry.set_boolean(true);
+    vector<::database::Entry> real_comparisons = {real_bool_entry};
+    
+    vector<string> edit_columns = {"float1", "string"};
+    ::database::Entry fake_float_entry;
+    fake_float_entry.set_str("oops");
+    ::database::Entry fake_string_entry;
+    fake_string_entry.set_flt(-2.0f);
+    vector<::database::Entry> fake_updations = {fake_float_entry, fake_string_entry};
+    
+    ::database::Entry real_float_entry;
+    real_float_entry.set_flt(-2.0f);
+    ::database::Entry real_string_entry;
+    real_string_entry.set_str("oops");
+    vector<::database::Entry> real_updations = {fake_float_entry, fake_string_entry};
+
+    try {
+        table.edit_rows(compare_columns, fake_comparisons, edit_columns, real_updations);
+        cout << "Update Test Failed! Did not catch comparison type mismatch."  << endl;
+    } catch(Table::type_mismatch e) {
+        cout << e.what() << endl;
+    }
+
+    try {
+        table.edit_rows(compare_columns, real_comparisons, edit_columns, fake_updations);
+        cout << "Update Test Failed! Did not catch updation type mismatch."  << endl;
+    } catch(Table::type_mismatch e) {
+        cout << e.what() << endl;
+    }
+}
+
+void deletion_test_standard(Table table) {
+    // Arranging Test
+    // Setting up column lists for filters
+    vector<string> columns1 = {"float1"};
+    vector<string> columns2 = {"int", "float1", "string", "boolean", "float2"};
+    vector<string> columns3 = {"float1", "string"};
+
+    /* --- Columns 1, Comparisons 1 ---
+        float1: -298.2f                    */
+    vector<::database::Entry> comparisons1;
+    comparisons1.push_back(make_entry(&table, "float1", 15, -298.2f, "friend", true));
+
+    // Setting up lists of entries to compare each entry at the corresponding column to
+    /* --- Columns 2, Comparisons 2 ---
+    -8347 | 11.2 | 43.0 | hello | true
+        int: -8347
+        float1: 11.2f
+        string: hello
+        boolean: true
+        float2: 43.f                      */
+    vector<::database::Entry> comparisons2;
+    comparisons2.push_back(make_entry(&table, "int", -8347, 11.2f, "hello", true));
+    comparisons2.push_back(make_entry(&table, "float1", -8347, 11.2f, "hello", true));
+    comparisons2.push_back(make_entry(&table, "string", -8347, 11.2f, "hello", true));
+    comparisons2.push_back(make_entry(&table, "boolean", -8347, 11.2f, "hello", true));
+    comparisons2.push_back(make_entry(&table, "float2", -8347, 43.f, "friend", true));
+    
+    /* --- Columns 3, Comparisons 3 ---
+        float1: 11.2
+        string: hello                    */
+    vector<::database::Entry> comparisons3;
+    comparisons3.push_back(make_entry(&table, "float1", 15, 11.2, "kfdk", false));
+    comparisons3.push_back(make_entry(&table, "string", 15, 11.2, "hello", false));
+
+    size_t size1_before = table.filter(columns1, comparisons1).size();
+    size_t size2_before = table.filter(columns2, comparisons2).size();
+    size_t size3_before = table.filter(columns3, comparisons3).size();
+
+    table.remove_rows(columns1, comparisons1);
+    table.remove_rows(columns2, comparisons2);
+    table.remove_rows(columns3, comparisons3);
+    
+    size_t size1 = table.filter(columns1, comparisons1).size();
+    size_t size2 = table.filter(columns2, comparisons2).size();
+    size_t size3 = table.filter(columns3, comparisons3).size();
+
+    assert(size1_before != 0);
+    assert(size2_before != 0);
+    assert(size3_before != 0);
+
+    assert(size1 == 0);
+    assert(size2 == 0);
+    assert(size3 == 0);
+}
+
+void deletion_test_type_mismatch(Table table) {
+    // Arranging Test
+    // Setting up column and comparison lists for filters
+    vector<string> columns1 = {"boolean"};
+    ::database::Entry fake_bool_entry;
+    fake_bool_entry.set_num(23);
+    vector<::database::Entry> comparisons1 = {fake_bool_entry};
+    
+    vector<string> columns2 = {"float1", "string"};
+    ::database::Entry fake_float_entry;
+    fake_float_entry.set_str("oops");
+    ::database::Entry fake_string_entry;
+    fake_string_entry.set_flt(-2.0f);
+    vector<::database::Entry> comparisons2 = {fake_float_entry, fake_string_entry};
+
+    try {
+        table.remove_rows(columns1, comparisons1);
+        cout << "filter Test Failed! Did not catch type mismatch."  << endl;
+    } catch(Table::type_mismatch e) {
+        cout << e.what() << endl;
+    }
+
+    try {
+        table.remove_rows(columns2, comparisons2);
+        cout << "filter Test Failed! Did not catch type mismatch."  << endl;
+    } catch(Table::type_mismatch e) {
+        cout << e.what() << endl;
+    }
+}
+
+void remove_all_test(Table table) {
+    vector<string> columns1 = {"boolean"};
+    ::database::Entry bool_entry;
+    bool_entry.set_boolean(true);
+    vector<::database::Entry> comparisons1 = {bool_entry};
+
+    vector<string> columns2 = {"float1", "string"};
+    /* --- Columns 2, Comparisons 2 ---
+        float1: 11.2
+        string: hello                    */
+    vector<::database::Entry> comparisons2;
+    comparisons2.push_back(make_entry(&table, "float1", 15, 11.2, "kfdk", false));
+    comparisons2.push_back(make_entry(&table, "string", 15, 11.2, "hello", false));
+
+    size_t size1_before = table.filter(columns1, comparisons1).size();
+    size_t size2_before = table.filter(columns2, comparisons2).size();
+
+    table.remove_all();
+
+    size_t size1_after = table.filter(columns1, comparisons1).size();
+    size_t size2_after = table.filter(columns2, comparisons2).size();
+
+    assert(size1_before != 0);
+    assert(size2_before != 0);
+
+    assert(size1_after == 0);
+    assert(size2_after == 0);
 }
