@@ -56,4 +56,13 @@ Table create_table2() {
 int main() {
     Table table1 = create_table1();
     Table table2 = create_table2();
+
+    vector<string> table_names = {"table1", "table2"};
+
+    vector<Table*> tables;
+
+    tables.emplace_back(&table1);
+    tables.emplace_back(&table2);
+
+    Database db = Database("test db", table_names, tables);
 }

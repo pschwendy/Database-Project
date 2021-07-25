@@ -15,4 +15,10 @@ message Row {
 
 message Table {
     repeated Row rows = 1;
+    enum Type {
+        INT = 0;
+        FLOAT = 1;
+        BOOL = 2;
+        STRING = 3;
+    }
 }
