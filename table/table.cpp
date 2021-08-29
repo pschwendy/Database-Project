@@ -44,22 +44,8 @@ string Table::schema() {
     string result;
     for(auto it : column_indecies) {
         string type_str;
-        switch(it.second.type) {
-            case 0:
-                type_str = "BOOL";
-                break;
-            case 1:
-                type_str = "INT";
-                break;
-            case 2:
-                type_str = "FLOAT";
-                break;
-            case 3:
-                type_str = "STRING";
-                break;
-        }
         string column = it.first;
-        result += type_str + " " + column;
+        result += Table_Type_Name(it.second.type) + " " + column;
     }
 
     return result;
@@ -234,7 +220,7 @@ string Table::get_type(string &column) {
     }
     
     string type_str = "";
-    switch(it->second.type) {
+    /*switch(it->second.type) {
         case 0:
             type_str = "BOOL";
             break;
@@ -247,8 +233,8 @@ string Table::get_type(string &column) {
         case 3:
             type_str = "STRING";
             break;
-    }
-    return type_str;
+    }*/
+    return Table_Type_Name(it->second.type);
 }
 
 // Outputs Table row by row, entry by entry
@@ -332,16 +318,16 @@ bool Table::compare_entries(const ::database::Entry &lhs, const ::database::Entr
 
 bool Table::correct_type(Info info, const ::database::Entry &entry) {
     switch(info.type) {
-        case 0:
+        case ::database::Table_Type_BOOL:
             return entry.has_boolean();
             break;
-        case 1:
+        case ::database::Table_Type_INT:
             return entry.has_num();
             break;
-        case 2:
+        case ::database::Table_Type_FLOAT:
             return entry.has_flt();
             break;
-        case 3:
+        case ::database::Table_Type_STRING:
             return entry.has_str();
             break;
         default:
@@ -350,32 +336,18 @@ bool Table::correct_type(Info info, const ::database::Entry &entry) {
 } // correct_type()
 
 string Table::get_type(Info &info) {
-    switch(info.type) {
-        case 0:
-            return "BOOL";
-            break;
-        case 1:
-            return "INT";
-            break;
-        case 2:
-            return "FLOAT";
-            break;
-        case 3:
-            return "STRING";
-            break;
-    }
-    return "NO TYPE";
+    return Table_Type_Name(info.type);
 } // get_type()
 
 string Table::get_type(::database::Entry entry) {
     if(entry.has_boolean()) {
-        return "BOOLEAN";
+        return Table_Type_Name(::database::Table_Type_BOOL);
     } else if(entry.has_num()) {
-        return "INT";
+        return Table_Type_Name(::database::Table_Type_INT);
     } else if(entry.has_flt()) {
-        return "FLOAT";
+        return Table_Type_Name(::database::Table_Type_FLOAT);
     } else if(entry.has_str()) {
-        return "STRING";
+        return Table_Type_Name(::database::Table_Type_STRING);
     }
     return "NO TYPE";
 } // get_type()

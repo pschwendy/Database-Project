@@ -145,12 +145,13 @@ class Table {
         // Stores type of said column as enum
         struct Info {
             size_t index;
-            enum types {
+            /*enum types {
                 bool_ = 0,
                 int_ = 1,
                 float_ = 2,
                 string_ = 3
-            } type;
+            } type;*/
+            ::database::Table_Type type;
             
             Info() { }
 
@@ -158,13 +159,13 @@ class Table {
             Info(size_t index_in, string& type_str) {
                 index = index_in;
                 if(type_str == "BOOL" || type_str == "bool") {
-                    type = bool_;
+                    type = ::database::Table_Type_BOOL;
                 } else if(type_str == "INT" || type_str == "int") {
-                    type = int_;
+                    type = ::database::Table_Type_INT;
                 } else if(type_str == "FLOAT" || type_str == "float") {
-                    type = float_;
+                    type = ::database::Table_Type_FLOAT;
                 } else if(type_str == "STRING" || type_str == "string") {
-                    type = string_;
+                    type = ::database::Table_Type_STRING;
                 }
             } // Info()
         }; // struct Info
