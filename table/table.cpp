@@ -9,6 +9,7 @@
 #include <exception>
 #include <sstream>
 #include <queue>
+#include <google/protobuf/util/message_differencer.h>
 using namespace std;
 
 /************
@@ -58,7 +59,7 @@ string Table::schema() {
     Info index;
     index = column_index(column);
     for(size_t i = 0; i < table.rows_size(); ++i) {
-        if(compare_entries(table.rows(i).entries(index.index), comparison)) {
+        if(google::protobuf::util::MessageDifferencer::Equals(table.rows(i).entries(index.index), comparison)) {
             return table.rows(i);
         }
     }
@@ -295,7 +296,7 @@ bool Table::check_row(const ::database::Row &row, vector<Info> indecies, vector<
             throw type_mismatch(type_mismatch::error_type::COMPARISON, get_type(indecies[j]), get_type(comparisons[j]));
         }
         
-        if(!compare_entries(row.entries(indecies[j].index), comparisons[j])) {
+        if(!google::protobuf::util::MessageDifferencer::Equals(row.entries(indecies[j].index), comparisons[j])) {
             good = false;
             break;
         }
