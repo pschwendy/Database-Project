@@ -39,6 +39,18 @@ class Database {
             return &tables;
         }
 
+        // Returns index of given column in given table
+        size_t column_index(string &table_name, string &column_name) {
+            Table table = get_table(table_name);
+            return table.column_index(column_name);
+        }
+
+        // 
+        vector<string> get_columns(string &table_name) {
+            Table table = get_table(table_name);
+            return table.columns();
+        }
+
         // Updates table entries @ edit_columns where row contains comparisons @ columns
         // Input: string &table_name -> name of table
         // Input: vector<string> &edit_columns -> list of names of columns where new entries are located
@@ -65,6 +77,17 @@ class Database {
                                     vector<string> &columns, 
                                     vector<::database::Entry> &comparisons);
         
+        // Selects specific columns from table where row contains comparisons @ columns
+        // Returns vector of rows containing selected columns from table
+        // Input: string &table_name -> name of table
+        // Input: vector<string> columns select_columns -> columns in final row
+        // Input: vector<string> &columns -> list of names of columns where comparison entries are located
+        // Input: vector<::database::Entry> &comparisons -> list of comparison entries
+        vector<::database::Row> select(string &table_name, 
+                                        vector<string> &select_columns, 
+                                        vector<string> &columns, 
+                                        vector<::database::Entry> &comparisons);
+
         // Deletes table data
         // Input: string &table_name -> name of table
         void drop_table(string &table_name);

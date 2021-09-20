@@ -42,6 +42,7 @@ Table::Table(vector<string> &columns, vector<string> &column_types) {
 
 // Returns schema of table in string from
 string Table::schema() {
+    // ADD NULLABLE ROWS
     string result;
     for(auto it : column_indecies) {
         string type_str;
@@ -57,7 +58,7 @@ string Table::schema() {
 // Input: Entry comparison -> entry to compare row entry to
 ::database::Row Table::get_row(string &column, ::database::Entry comparison) {
     Info index;
-    index = column_index(column);
+    index = column_info(column);
     for(size_t i = 0; i < table.rows_size(); ++i) {
         if(google::protobuf::util::MessageDifferencer::Equals(table.rows(i).entries(index.index), comparison)) {
             return table.rows(i);
@@ -75,7 +76,7 @@ vector<::database::Row> Table::filter(vector<string> &columns, vector<::database
     
     for (string column : columns) {
         Info index;
-        index = column_index(column);
+        index = column_info(column);
         indecies.push_back(index);
     }
 
@@ -87,6 +88,41 @@ vector<::database::Row> Table::filter(vector<string> &columns, vector<::database
     }
     return subset;
 } // filter()
+
+// Filters and returns rows where each Entry@each column = the said comparison
+// Input: vector<string> columns -> columns being accessed
+// Input: vector<Entry> comparisons -> list of entries to compare each row entry@column to
+vector<::database::Row> Table::filter(vector<string> select_columns, vector<string> &columns, vector<::database::Entry> &comparisons) {
+    vector<::database::Row> subset;
+    vector<Info> indecies;
+    vector<Info> return_entries;
+    
+    for (string column : columns) {
+        Info index;
+        index = column_info(column);
+        indecies.push_back(index);
+    }
+
+    for (string column : select_columns) {
+        Info index;
+        index = column_info(column);
+        return_entries.push_back(index);
+    }
+
+    for(size_t i = 0; i < table.rows_size(); ++i) {
+        bool good = check_row(table.rows(i), indecies, comparisons);
+        if(good) {
+            // ASK ASH IF THIS IS POSSIBLE/FEASIBLE
+            ::database::Row row;
+            for(Info info: return_entries) {
+                ::database::Entry *entry = row.add_entries();
+                entry->CopyFrom(table.rows(i).entries(info.index));
+            }
+            subset.emplace_back(row);
+        }
+    }
+    return subset;
+} // filter() 2
 
 // Finds and edits rows where each entry@each column = the said comparison
 // Changes rows to set entry@each edit_column = the said new entry
@@ -100,12 +136,12 @@ void Table::edit_rows(vector<string> &columns,
                         vector<::database::Entry> &entries) {
     vector<Info> indecies;
     for (string column : columns) {
-        Info index = column_index(column);
+        Info index = column_info(column);
         indecies.push_back(index);
     }
     vector<Info> edit_indecies;
     for (string column : edit_columns) {
-        Info index = column_index(column);
+        Info index = column_info(column);
         edit_indecies.push_back(index);
     }
 
@@ -146,7 +182,7 @@ void Table::edit_all(vector<string> &edit_columns,
                 vector<::database::Entry> &entries) {
     vector<Info> edit_indecies;
     for (string column : edit_columns) {
-        Info index = column_index(column);
+        Info index = column_info(column);
         edit_indecies.push_back(index);
     }
 
@@ -187,7 +223,7 @@ void Table::remove_rows(vector<string> &columns, vector<::database::Entry> &comp
     
     for (string column : columns) {
         Info index;
-        index = column_index(column);
+        index = column_info(column);
         indecies.push_back(index);
     }
 
@@ -278,13 +314,13 @@ void Table::output_entry(::database::Entry& entry) {
  *  PRIVATE  *
  *************/
 
-Table::Info Table::column_index(const string &column) {
+Table::Info Table::column_info(const string &column) {
     auto it = column_indecies.find(column);
     if(it == column_indecies.end()) {
         throw out_of_range("Column '" + column + "' Does Not Exist!");
     }
     return it->second;
-} // column_index()
+} // column_info()
 
 // Loops through all comparisons, checking if row entry@index is equal to the corresponding comparison
 // If all checks are good, returns true; else, returns false
@@ -318,18 +354,19 @@ bool Table::compare_entries(const ::database::Entry &lhs, const ::database::Entr
 } // compare_entries()
 
 bool Table::correct_type(Info info, const ::database::Entry &entry) {
+    bool null_entry = !(entry.has_boolean() || entry.has_num() || entry.has_flt() || entry.has_str());
     switch(info.type) {
         case ::database::Table_Type_BOOL:
-            return entry.has_boolean();
+            return entry.has_boolean() || (info.nullable && null_entry);
             break;
         case ::database::Table_Type_INT:
-            return entry.has_num();
+            return entry.has_num() || (info.nullable && null_entry);
             break;
         case ::database::Table_Type_FLOAT:
-            return entry.has_flt();
+            return entry.has_flt() || (info.nullable && null_entry);
             break;
         case ::database::Table_Type_STRING:
-            return entry.has_str();
+            return entry.has_str() || (info.nullable && null_entry);
             break;
         default:
             return false;

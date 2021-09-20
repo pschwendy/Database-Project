@@ -12,6 +12,43 @@
 
 using namespace std;
 
+Table create_table1();
+Table create_table2();
+
+void no_table_found_test();
+
+void insert_test_standard();
+void insert_test_type_mismatch();
+void insert_test_empty();
+
+void select_test_standard();
+void select_test_type_mismatch();
+void select_test_empty();
+
+void update_test_standard();
+void update_test_type_mismatch();
+void update_test_empty();
+
+void delete_test_standard();
+void delete_test_type_mismatch();
+void delete_test_empty();
+
+int main() {
+    Table table1 = create_table1();
+    Table table2 = create_table2();
+    Table empty_table = Table();
+
+    vector<string> table_names = {"table1", "table2", "empty"};
+
+    vector<Table*> tables;
+
+    tables.emplace_back(&table1);
+    tables.emplace_back(&table2);
+    tables.emplace_back(&empty_table);
+
+    Database db = Database("test db", table_names, tables);
+}
+
 Table create_table1() {
     ::database::Row row = make_row(1, 0, 1.2, 3.0, "friend", "", true);
     ::database::Row row1 = make_row(-8347, 0, 11.2, 43.0, "hello", "", true);
@@ -53,16 +90,6 @@ Table create_table2() {
     return table;
 }
 
-int main() {
-    Table table1 = create_table1();
-    Table table2 = create_table2();
-
-    vector<string> table_names = {"table1", "table2"};
-
-    vector<Table*> tables;
-
-    tables.emplace_back(&table1);
-    tables.emplace_back(&table2);
-
-    Database db = Database("test db", table_names, tables);
+void insert_test_standard() {
+    
 }

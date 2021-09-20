@@ -3,10 +3,12 @@ syntax = "proto2";
 package database;
 
 message Entry {
-    optional string str = 1;
-    optional float flt = 2;
-    optional int64 num = 3;
-    optional bool boolean = 4;
+    oneof value {
+        string str = 1;
+        float flt = 2;
+        int64 num = 3;
+        bool boolean = 4;
+    }  
 }
 
 message Row {

@@ -24,6 +24,9 @@ class Driver {
         Database* db;
 
         void parse_input(string &input);
+
+        // Add preprocessing project
+        string preprocess_input(string &input);
 };
 
 #endif // Driver_h

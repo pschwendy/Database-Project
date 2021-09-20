@@ -63,6 +63,22 @@ vector<::database::Row> Database::select(string &table_name,
     return table->filter(columns, comparisons);
 } // select()
 
+// Selects rows from table where row contains comparisons @ columns
+// Input: string &table_name -> name of table
+// Input: vector<string> &columns -> list of names of columns where comparison entries are located
+// Input: vector<::database::Entry> &comparisons -> list of comparison entries
+vector<::database::Row> Database::select(string &table_name, 
+                                            vector<string> &select_columns, 
+                                            vector<string> &columns, 
+                                            vector<::database::Entry> &comparisons) {
+    try {
+        Table* table = get_table(table_name);
+    } catch () {
+        // throw()
+    }
+    return table->filter(select_columns, columns, comparisons);
+} // select()
+
 // Deletes table data
 // Input: string &table_name -> name of table
 void Database::drop_table(string &table_name) {

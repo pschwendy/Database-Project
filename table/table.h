@@ -49,6 +49,14 @@ class Table {
         vector<::database::Row> filter(vector<string> &columns, 
                                         vector<::database::Entry> &comparisons);
         
+        // Filters and returns rows (created based on select_columns) where each Entry@each column = the said comparison
+        // Input: vector<string> columns select_columns -> columns in final row
+        // Input: vector<string> columns -> columns being accessed
+        // Input: vector<Entry> comparisons -> list of entries to compare each row entry@column to
+        vector<::database::Row> Table::filter(vector<string> select_columns, 
+                                                vector<string> &columns, 
+                                                vector<::database::Entry> &comparisons);
+
         // Finds and edits rows where each entry@each column = the said comparison
         // Changes rows to set entry@each edit_column = the said new entry
         // Input: vector<string> columns -> columns being accessed
@@ -139,25 +147,38 @@ class Table {
             } // what()
         }; // struct type_mismatch
 
+        // Returns index of given column
+        size_t column_index(const string &column) {
+            Info info = column_info(column);
+            return info.index;
+        }
+        
+        // Returns columns in order
+        // CHECK WITH ASH
+        vector<string> columns() {
+            vector<string> table_columns;
+            for (auto it: column_indecies) {
+                column = it->first();
+                table_columns.emplace_back(column);
+            }
+            return table_columns;
+        }
+
     private:
         // Info Type
         // Stores column index in row as size_t
         // Stores type of said column as enum
         struct Info {
             size_t index;
-            /*enum types {
-                bool_ = 0,
-                int_ = 1,
-                float_ = 2,
-                string_ = 3
-            } type;*/
             ::database::Table_Type type;
-            
+            bool nullable;
+
             Info() { }
 
             // Info Constructor  
-            Info(size_t index_in, string& type_str) {
+            Info(size_t index_in, string& type_str, bool is_nullable = true) {
                 index = index_in;
+                nullable = is_nullable;
                 if(type_str == "BOOL" || type_str == "bool") {
                     type = ::database::Table_Type_BOOL;
                 } else if(type_str == "INT" || type_str == "int") {
@@ -167,13 +188,14 @@ class Table {
                 } else if(type_str == "STRING" || type_str == "string") {
                     type = ::database::Table_Type_STRING;
                 }
+
             } // Info()
         }; // struct Info
 
         unordered_map<string, Info> column_indecies;
         ::database::Table table;
 
-        Info column_index(const string &column);
+        Info column_info(const string &column);
         
         bool check_row(const ::database::Row &row, vector<Info> indecies, vector<::database::Entry> &comparisons);
         bool compare_entries(const ::database::Entry &lhs, const ::database::Entry &rhs);

@@ -38,6 +38,7 @@ static Database* Storage::read_data(string &db_name) {
         
         while(table_list >> table_name) {
             ifstream schema(path + table_name + "_schema.txt");
+            // ADD NULLABLE ROWS
             vector<string> columns;
             vector<string> types;
 
@@ -48,6 +49,8 @@ static Database* Storage::read_data(string &db_name) {
             ifstream rows(path + table_name + "_rows.txt");
             ::database::Table parse_table;
             parse_table.ParseFromIstream(&rows));
+            
+            // ADD NULLABLE ROWS
             Table table = Table(table_name, columns, types, parse_table);
 
             names.emplace_back(table_name);
