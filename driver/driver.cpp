@@ -5,25 +5,25 @@
 //
 
 #include "driver.h"
-#include <iostream>
-#include <exception>
-#include <sstream>
-#include <cassert>
 
-using std::cout, std::cin, std::exception, std::string;
-
+using namespace std;
 
 /************
  *  PUBLIC  *
  ************/
 
 // Opens shell for input database commands
-void run() {
+void Driver::run(istream& in) {
+    cout << "...calling read_data" << endl;
+    Storage::read_data();
+    cout << "...after read_data" << endl;
     string input;
-    cout << "#" << endl;
-    while(getline(cin, input, ";")) {
+    cout << "# ";
+    while(getline(in, input, ';')) {
+        cout << "...parsing input" << endl;
         try {
             parse_input(input);
+            cout << "# ";
         } catch (exception e) {
             cout << e.what() << endl;
         }
@@ -34,77 +34,115 @@ void run() {
  *  PRIVATE  *
  *************/
 
-void parse_input(string &input) {
+void Driver::parse_input(string &input) {
+    cout << "...parsing input" << endl;
     stringstream ss(input);
 
     string command;
     ss >> command;
 
-    if(command == "SELECT") {
+    // Add "USE Database"
+
+    cout << "...parsing input" << endl;
+    if(command == "SELECT" && using_db) {
         parse_select(ss);
-    } else if(command == "INSERT") {
+    } else if(command == "INSERT" && using_db) {
         parse_insert(ss);
-    } else if(command == "UPDATE") {
-        // parse_update(stringstream &input)
+    } else if(command == "UPDATE" && using_db) {
+        parse_update(ss);
+    } else if(command == "CREATE") {
+        cout << "---------CREATING---------" << endl;
+        ss >> command;
+        if(command == "TABLE" && using_db) {
+            string thing = ss.str();
+            parse_create(thing);
+        } else if(command == "DATABASE") {
+            cout << "---------DATABASE---------" << endl;
+            ss >> command;
+            int i = 0; 
+            string database_name = "";
+            while(input[i] != ';' && i < command.size()) {
+                database_name += command[i];
+                ++i;
+            }
+            Storage::create_database(database_name);
+            db_name = database_name;
+            using_db = true;
+        }
+    } if(command == "USE") {
+        ss >> command;
+        if(command == "DATABASE") {
+            ss >> command;
+            int i = 0; 
+            string database_name = "";
+            while(input[i] != ';' && i < command.size()) {
+                database_name += command[i];
+                ++i;
+            }
+            db_name = database_name;
+            using_db = true;
+            if(!Storage::check_database_exists(db_name)) {
+                // throw some error
+            }
+        }
+    } else if(!using_db) {
+        throw std::out_of_range("Must select a database to use.");
     } else {
-        throw std::exception("Command " + command + "Not Known");
+        throw std::out_of_range("Command " + command + "Not Known");
     }
 }
 
-::database::Entry add_entry_to_row(string &table, string &column_name, string &entry_name, ::database::Row entries) {
+void Driver::add_entry_to_row(Table &table, string &column_name, string &entry_name, ::database::Row entries) {
+    ::database::Entry *entry = entries.add_entries();
     if(column_name == "") {
-        ::database::Entry *entry = entries.add_entries();
-        entries.emplace_back(entry);
         return;
     }
 
-    switch(db.get_column_type(table, column_name)) {
+    set_entry_value(*entry, entry_name, column_name, table);
+}
+
+void Driver::add_entry_to_row(Table &table, string &column_name, string &entry_name, vector<::database::Entry> entries) {
+    ::database::Entry entry;
+    if(column_name == "") {
+        return;
+    }
+
+    set_entry_value(entry, entry_name, column_name, table);
+    entries.emplace_back(entry);
+}
+
+void Driver::set_entry_value(::database::Entry &entry, string &entry_name, string &column_name, Table &table) {
+    bool b_value;
+    int i_value;
+    float f_value;
+    stringstream entry_name_ss(entry_name);
+    switch(table.column_type(column_name)) {
         case ::database::Table_Type_BOOL:
-            ::database::Entry *entry = entries.add_entries();
-
-            bool value;
-            stringstream entry_name_ss(entry_name);
-            entry_name_ss >> value;
-
-            entry->set_bool(value);
-            entries.emplace_back(entry);
+            entry_name_ss >> b_value;
+            entry.set_boolean(b_value);
             break;
         
         case ::database::Table_Type_INT:
-            ::database::Entry *entry = entries.add_entries();
-
-            int value;
-            stringstream entry_name_ss(entry_name);
-            entry_name_ss >> value;
-
-            entry->set_num(value);
-            entries.emplace_back(entry);
+            entry_name_ss >> i_value;
+            entry.set_num(i_value);
             break;
         
         case ::database::Table_Type_FLOAT:
-            ::database::Entry *entry = entries.add_entries();
-
-            float value;
-            stringstream entry_name_ss(entry_name);
-            entry_name_ss >> value;
-
-            entry->set_flt(value);
-            entries.emplace_back(entry);
+            entry_name_ss >> f_value;
+            entry.set_flt(f_value);
             break;
         
         case ::database::Table_Type_STRING:
-            ::database::Entry *entry = entries.add_entries();
-            entry->set_str(entry_name);
-            entries.emplace_back(entry);
+            entry.set_str(entry_name);
             break;
         
         default:
-            throw std::exception("Column " + column_name + " does not exist!");
+            throw std::out_of_range("Column " + column_name + " does not exist!");
             break;
     }
 }
 // Preproccess input, removing unnecessary spaces
-string preprocess_input(string &input) {
+string Driver::preprocess_input(string &input) {
     bool remove_space = false;
     string new_input = "";
     for(int i = 0; i < input.length(); ++i) {
@@ -120,14 +158,22 @@ string preprocess_input(string &input) {
         } else if(!remove_space && input[i] == ' ') {
             remove_space = true;
         }
-
+        
+        if(input[i] == '=' && new_input[new_input.length()-1] == ' ') {
+            new_input[new_input.length() - 1] = '=';
+            continue;
+        
+        } else if(new_input[new_input.length()-1] == '=' && input[i] == ' ') {
+           continue;
+        }
+        
         new_input += input[i];
     }
 
     return new_input;
 }
 
-void parse_select(stringstream &input) {
+void Driver::parse_select(stringstream &input) {
     bool select_all_columns = false;
     vector<string> select_columns;
     
@@ -138,58 +184,63 @@ void parse_select(stringstream &input) {
         select_all_columns = true;
     }
 
-    for(int i = 0; i < statement.length(), ++i) {
+    for(int i = 0; i < statement.length(); ++i) {
         string select_column;
-        while(input[i] != ',') {
-            select_column += input[i];
+        while(statement[i] != ',') {
+            select_column += statement[i];
             ++i;
         }
 
-        select_column.emblace_back(select_column);
+        select_columns.emplace_back(select_column);
     }
 
     input >> statement;
     if(statement != "FROM") {
-        throw std::exception("Bad"); // Add nicer error message
+        throw std::out_of_range("Bad"); // Add nicer error message
     }
 
-    string table;
-    input >> table;
+    string table_name;
+    input >> table_name;
+    Table table = Storage::read_table(db_name, table_name);
 
     if(input >> statement && statement == "WHERE") {
         vector<string> columns;
         vector<::database::Entry> entries;
         
         input >> statement;
-        for(int i = 0; i < statement.length(), ++i) {
+        for(int i = 0; i < statement.length(); ++i) {
             string column_name = "";
             string entry_name = "";
 
-            while(input[i] != '=') {
-                column_name += input[i];
+            while(statement[i] != '=') {
+                column_name += statement[i];
                 ++i;
             }
             
             ++i;
 
-            while(input[i] != ',') {
-                entry_name += input[i];
+            while(statement[i] != ',') {
+                if(statement[i] == '"') {
+                    ++i;
+                    continue;
+                }
+                entry_name += statement[i];
                 ++i;
             }
 
             add_entry_to_row(table, column_name, entry_name, entries);
         }
 
-        
+        vector<::database::Row> rows;
         if(select_all_columns) {
-            vector<::database::Row> rows = db.select(table, columns, entries);
+            rows = table.filter(columns, entries);
         
         } else {
-            vector<::database::Row> rows = db.select_columns(table, select_columns, columns, entries);
+            rows = table.filter(select_columns, columns, entries);
         }
 
         for(int i = 0; i < rows.size(); ++i) {
-            ::database::Row row = table.rows(i);
+            ::database::Row row = rows[i];
             for(int j = 0; j < row.entries_size(); ++j) {
                 ::database::Entry entry = row.entries(j);
                 if(entry.has_str()) {
@@ -207,42 +258,82 @@ void parse_select(stringstream &input) {
         }
     } else {
         // Add specific rows
-        db.output();
+        //db->output();
     }
+}
+
+
+void Driver::parse_update(stringstream &input) {
+    vector<string> select_columns;
+    
+    string statement;
+    
+    string table_name;
+    input >> table_name;
+    Table table = Storage::read_table(db_name, table_name);
+
+    input >> statement;
+    if(statement != "SET") {
+        throw std::out_of_range("Bad"); // Add nicer error message
+    }
+
+    vector<string> edit_columns;
+    vector<::database::Entry> edit_entries;
+    
+    input >> statement;
+    construct_columns_and_entries(edit_columns, edit_entries, statement, table);
+
+    if(input >> statement && statement == "WHERE") {
+        vector<string> columns;
+        vector<::database::Entry> entries;
+        
+        input >> statement;
+        construct_columns_and_entries(columns, entries, statement, table);
+        table.edit_rows(edit_columns, edit_entries, columns, entries);
+        
+    } else {
+        table.edit_all(edit_columns, edit_entries);
+    }
+    Storage::write_table(db_name, table);
 }
 
 // INSERT INTO table (col1, col2, ...) VALUES (x1, x2, );
 // INSERT INTO table VALUES (x1, x2, ... );
 // WORK WITH NULLABLE bool in Info struct for unordered map
-void parse_insert(stringstream &input) {
+void Driver::parse_insert(stringstream &input) {
     vector<string> insert_columns;
     
     string statement;
     input >> statement;
 
     if(statement != "INTO" || statement != "into") {
-        throw std:exception("BAd"); // add nicer
+        throw std::out_of_range("BAd"); // add nicer
     }
         
 
-    string table;
-    input >> table;
+    string table_name;
+    input >> table_name;
+    Table table = Storage::read_table(db_name, table_name);
 
     input >> statement;
 
     if(statement != "values" || statement != "VALUES") {
         assert(statement[0] != '(');
-        for(int i = 1; i < statement.length(), ++i) {
+        for(int i = 1; i < statement.length(); ++i) {
             string insert_column;
-            while(input[i] != ',' || input[i] != ')') {
-                insert_column += input[i];
+            while(statement[i] != ',' || statement[i] != ')') {
+                if(statement[i] == '"') {
+                    ++i;
+                    continue;
+                }
+                insert_column += statement[i];
                 ++i;
             }
 
-            for(int j = 0; db.column_index(insert_column) + j != insert_columns.size(); ++j) {
+            for(int j = 0; table.column_index(insert_column) + j != insert_columns.size(); ++j) {
                 insert_columns.emplace_back("");
             }
-            insert_columns.emblace_back(insert_column);
+            insert_columns.emplace_back(insert_column);
         }
         input >> statement;
         assert(statement != "values" || statement != "VALUES");
@@ -253,14 +344,18 @@ void parse_insert(stringstream &input) {
     
     ::database::Row entries;
     int j = 0;
-    for(int i = 1; i < statement.length(), ++i) {
+    for(int i = 1; i < statement.length(); ++i) {
         string entry_name;
-        while(input[i] != ',' || input[i] != ')') {
-            entry_name += input[i];
+        while(statement[i] != ',' || statement[i] != ')') {
+            if(statement[i] == '"') {
+                ++i;
+                continue;
+            }
+            entry_name += statement[i];
             ++i;
         }
         if(insert_columns.size() == 0) {
-            add_entry_to_row(table, db.get_columns(table)[j], entry_name, entries);
+            add_entry_to_row(table, table.columns()[j], entry_name, entries);
         } else if (insert_columns.size() <= j) {
             // throw
         } else {
@@ -271,7 +366,123 @@ void parse_insert(stringstream &input) {
     }
 
     if(insert_columns.size() == 0) {
-        db.insert(table, entries);
+        table.insert(entries);
+    }
+    Storage::write_table(db_name, table);
+}
+
+void Driver::parse_delete(stringstream &input) {
+    string statement;
+    input >> statement;
+    if(statement != "FROM") {
+        throw std::out_of_range("Bad"); // Add nicer error message
+    }
+
+    string table_name;
+    input >> table_name;
+    Table table = Storage::read_table(db_name, table_name);
+
+    if(input >> statement && statement == "WHERE") {
+        vector<string> columns;
+        vector<::database::Entry> entries;
+        
+        input >> statement;
+        construct_columns_and_entries(columns, entries, statement, table);
+        
+        table.remove_rows(columns, entries);
+    } else {
+        // Add specific rows
+        table.remove_all();
+    }
+    Storage::write_table(db_name, table);
+}
+
+void Driver::construct_columns_and_entries(vector<string> &columns, vector<::database::Entry> &entries, string &statement, Table &table) {
+    for(int i = 0; i < statement.length(); ++i) {
+        string column_name = "";
+        string entry_name = "";
+
+        while(statement[i] != '=') {
+            column_name += statement[i];
+            ++i;
+        }
+        
+        ++i;
+
+        while(statement[i] != ',') {
+            if(statement[i] == '"') {
+                ++i;
+                continue;
+            }
+            entry_name += statement[i];
+            ++i;
+        }
+
+        add_entry_to_row(table, column_name, entry_name, entries);
     }
 }
 
+
+void Driver::parse_create(string &input) {
+    int i = 0; 
+    string table_name = "";
+    while(input[i] != '(' && i < input.size()) {
+        table_name += input[i];
+        ++i;
+    }
+
+    vector<string> columns;
+    vector<string> types;
+    vector<bool> nullable_list;
+
+    enum inserting {
+        column = 0,
+        type = 1,
+        nullable = 2
+    } insert_type;
+
+    while(input[i] == ')' && i < input.size()) {
+        string sub_input = "";
+        bool nullable_column = true;
+        
+        while((insert_type != inserting::nullable && input[i] != ' ') || input[i] != ',') {
+            sub_input += input[i];
+        }
+
+        switch(insert_type) {
+            case inserting::column:
+                columns.emplace_back(sub_input);
+                insert_type = static_cast<inserting>(static_cast<int>(insert_type) + 1);
+                if(input[i] != ',') {
+                    throw out_of_range("Must include column datatype for " + sub_input);
+                }
+                break;
+
+            case inserting::type:
+                types.emplace_back(sub_input);
+                if(input[i] != ',') {
+                    nullable_list.push_back(nullable_column);
+                    insert_type = inserting::column;
+                    continue;
+                } else {
+                    insert_type = static_cast<inserting>(static_cast<int>(insert_type) + 1);
+                }
+                break;
+
+            case inserting::nullable:
+                if(input != "NULL") {
+                    nullable_column = false;
+                }
+                nullable_list.push_back(nullable_column);
+                insert_type = inserting::column;
+                break;
+
+            default:
+                break;
+        }
+        ++i;
+    }
+    Table table = Table(table_name, columns, types, nullable_list);
+
+    Storage::create_table(db_name, table);
+}

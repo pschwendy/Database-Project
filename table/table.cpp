@@ -21,12 +21,26 @@ using namespace std;
 // Input: vector<string> &columns -> table colums, to be sorted in a map
 // Input: vector<string> &column_types -> data types of columns
 // Input: ::database::Table &input_table -> table
-Table::Table(vector<string> &columns, vector<string> &column_types, ::database::Table &input_table) {
+Table::Table(string &tb_name, vector<string> &columns, vector<string> &column_types, vector<bool> &nullable_list, ::database::Table &input_table) {
+    table_name = tb_name;
     for(size_t i = 0; i < columns.size(); ++i) {
-        Info info = Info(i, column_types[i]);
+        Info info = Info(i, column_types[i], nullable_list[i]);
         column_indecies.emplace(columns[i], info);
     }
     table = input_table;
+} // Table()
+
+// Constructor
+// Constructs table given imput rows and columns
+// Input: vector<string> &columns -> table colums, to be sorted in a map
+// Input: vector<string> &column_types -> data types of columns
+// Input: ::database::Table &input_table -> table
+Table::Table(string &tb_name, vector<string> &columns, vector<string> &column_types, vector<bool> &nullable_list) {
+    table_name = tb_name;
+    for(size_t i = 0; i < columns.size(); ++i) {
+        Info info = Info(i, column_types[i], nullable_list[i]);
+        column_indecies.emplace(columns[i], info);
+    }
 } // Table()
 
 // Constructor
@@ -43,14 +57,19 @@ Table::Table(vector<string> &columns, vector<string> &column_types) {
 // Returns schema of table in string from
 string Table::schema() {
     // ADD NULLABLE ROWS
-    string result;
+    stringstream result;
     for(auto it : column_indecies) {
         string type_str;
         string column = it.first;
-        result += Table_Type_Name(it.second.type) + " " + column;
+        result << Table_Type_Name(it.second.type) << " " << column;
+        if(it.second.nullable) {
+            result << " NOT NULL" << "\n";
+        } else {
+            result << " NULL" << "\n";
+        }
     }
 
-    return result;
+    return result.str();
 } // schema()
 
 // Returns first row where Entry@column = comparison

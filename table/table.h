@@ -26,16 +26,27 @@ class Table {
         // Input: vector<string> &columns -> table colums, to be sorted in a map
         // Input: vector<string> &column_types -> data types of columns
         // Input: ::database::Table &input_table -> table
-        Table(vector<string> &columns, vector<string> &column_types, ::database::Table &input_table);
+        Table(string &tb_name, vector<string> &columns, vector<string> &column_types, vector<bool> &nullable_list, ::database::Table &input_table);
 
         // Constructor
-        // Constructs table given imput rows and columns
+        // Constructs table given input columns and their types
+        // Input: vector<string> &columns -> table colums, to be sorted in a map
+        // Input: vector<string> &column_types -> data types of columns
+        Table(string &tb_name, vector<string> &columns, vector<string> &column_types, vector<bool> &nullable_list);
+
+        // Constructor
+        // Constructs table given input columns and their types
         // Input: vector<Row> input_rows -> rows of new table
         // Input: vector<string> columns -> table colums, to be sorted in a map
         Table(vector<string> &columns, vector<string> &column_types);
 
         // Returns schema of table in string form
         string schema();
+
+        // Returns name of the table
+        string get_name() {
+            return table_name;
+        }
 
         // Returns first row where Entry@column = comparison
         // Input: string column -> column accessing
@@ -53,7 +64,7 @@ class Table {
         // Input: vector<string> columns select_columns -> columns in final row
         // Input: vector<string> columns -> columns being accessed
         // Input: vector<Entry> comparisons -> list of entries to compare each row entry@column to
-        vector<::database::Row> Table::filter(vector<string> select_columns, 
+        vector<::database::Row> filter(vector<string> select_columns, 
                                                 vector<string> &columns, 
                                                 vector<::database::Entry> &comparisons);
 
@@ -152,13 +163,18 @@ class Table {
             Info info = column_info(column);
             return info.index;
         }
+
+        ::database::Table_Type column_type(const string &column) {
+            Info info = column_info(column);
+            return info.type;
+        }
         
         // Returns columns in order
         // CHECK WITH ASH
         vector<string> columns() {
             vector<string> table_columns;
             for (auto it: column_indecies) {
-                column = it->first();
+                string column = it.first;
                 table_columns.emplace_back(column);
             }
             return table_columns;
@@ -192,6 +208,7 @@ class Table {
             } // Info()
         }; // struct Info
 
+        string table_name;
         unordered_map<string, Info> column_indecies;
         ::database::Table table;
 

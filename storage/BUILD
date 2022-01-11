@@ -3,6 +3,7 @@ cc_library(
 	srcs = ["storage.cpp"],
 	hdrs = ["storage.h"],
 	deps = [
-		"//database:database_lib",
-	]
+		"//table:table_lib",
+	],
+	visibility = ["//visibility:public"],
 )

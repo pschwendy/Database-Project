@@ -11,6 +11,7 @@
 #include <string>
 #include <vector>
 #include "table/table.h"
+#include "storage/storage.h"
 
 using namespace std;
 
@@ -23,7 +24,7 @@ class Database {
         }
 
         // Database Contructor
-        Database(string name, vector<string> table_names, vector<Table*> table_ptrs);
+        Database(string &name, vector<string> &table_names, vector<Table> &table_ptrs);
         
         // Returns name of database
         string get_name() {
@@ -41,14 +42,19 @@ class Database {
 
         // Returns index of given column in given table
         size_t column_index(string &table_name, string &column_name) {
-            Table table = get_table(table_name);
-            return table.column_index(column_name);
+            Table* table = get_table(table_name);
+            return table->column_index(column_name);
         }
 
         // 
         vector<string> get_columns(string &table_name) {
-            Table table = get_table(table_name);
-            return table.columns();
+            Table* table = get_table(table_name);
+            return table->columns();
+        }
+
+        database::Table_Type get_column_type(string &table_name, string &column_name) {
+            Table* table = get_table(table_name);
+            return table->column_type(column_name);
         }
 
         // Updates table entries @ edit_columns where row contains comparisons @ columns
@@ -62,6 +68,10 @@ class Database {
                     vector<::database::Entry> &entries, 
                     vector<string> &columns, 
                     vector<::database::Entry> &comparisons);
+
+        void update(string &table_name, 
+                    vector<string> &edit_columns,  
+                    vector<::database::Entry> &entries);
         
         // Inserts new row into table
         // Input: string &table_name -> name of table
@@ -87,6 +97,18 @@ class Database {
                                         vector<string> &select_columns, 
                                         vector<string> &columns, 
                                         vector<::database::Entry> &comparisons);
+
+        // Deletes rows from table where row contains comparisons @ columns
+        // Input: string &table_name -> name of table
+        // Input: vector<string> &columns -> list of names of columns where comparison entries are located
+        // Input: vector<::database::Entry> &comparisons -> list of comparison entries
+        void delete_rows(string &table_name, 
+                            vector<string> &columns, 
+                            vector<::database::Entry> &comparisons);
+
+        // Deletes all rows from given table where row contains comparisons @ columns
+        // Input: string &table_name -> name of table
+        void delete_all_rows(string &table_name);
 
         // Deletes table data
         // Input: string &table_name -> name of table
