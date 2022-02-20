@@ -11,9 +11,8 @@
 using namespace std;
 
 int main() {
-    cout << "-------STUFF--------" << endl;
+    cout << true << endl;
     Driver driver = Driver();
-    cout << "-------STUFF--------" << endl;
     driver.run(cin);
 }
 
