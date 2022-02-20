@@ -27,6 +27,7 @@ class Table {
         // Input: vector<string> &column_types -> data types of columns
         // Input: ::database::Table &input_table -> table
         Table(string &tb_name, vector<string> &columns, vector<string> &column_types, vector<bool> &nullable_list, ::database::Table &input_table);
+        Table(string &tb_name, vector<string> &columns, vector<string> &column_types, vector<bool> &nullable_list, vector<int> &indecies, ::database::Table &input_table);
 
         // Constructor
         // Constructs table given input columns and their types
@@ -53,6 +54,9 @@ class Table {
         // Input: Entry comparison -> entry to compare row entry to
         ::database::Row get_row(string &column, 
                                     ::database::Entry comparison);
+
+        // Returns all rows
+        ::database::Table filter_all();
 
         // Filters and returns rows where each Entry@each column = the said comparison
         // Input: vector<string> columns -> columns being accessed
@@ -88,7 +92,7 @@ class Table {
         // Inserts row into database
         // Checks if row aligns with correct types
         // Input: ::database::row &row -> row being inserted
-        void insert(::database::Row &row);
+        void insert(vector<string> columns, vector<::database::Entry> entries);
         
         // Removes rows where each entry@each column = the said comparison
         // Input: vector<string> columns -> columns being accessed

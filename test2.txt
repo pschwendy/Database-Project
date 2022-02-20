@@ -1,0 +1,6 @@
+use database app;
+SELECT * FROM test WHERE day=22;
+UPDATE test SET age=11 WHERE day=22;
+SELECT * FROM test WHERE day=22;
+DELETE FROM test WHERE day=22;
+SELECT * FROM test;

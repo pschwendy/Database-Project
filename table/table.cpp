@@ -25,7 +25,21 @@ Table::Table(string &tb_name, vector<string> &columns, vector<string> &column_ty
     table_name = tb_name;
     for(size_t i = 0; i < columns.size(); ++i) {
         Info info = Info(i, column_types[i], nullable_list[i]);
-        column_indecies.emplace(columns[i], info);
+        column_indecies.insert({columns[i], info});
+    }
+    table = input_table;
+} // Table()
+
+// Constructor
+// Constructs table given imput rows and columns
+// Input: vector<string> &columns -> table colums, to be sorted in a map
+// Input: vector<string> &column_types -> data types of columns
+// Input: ::database::Table &input_table -> table
+Table::Table(string &tb_name, vector<string> &columns, vector<string> &column_types, vector<bool> &nullable_list, vector<int> &indecies, ::database::Table &input_table) {
+    table_name = tb_name;
+    for(size_t i = 0; i < columns.size(); ++i) {
+        Info info = Info(indecies[i], column_types[i], nullable_list[i]);
+        column_indecies.insert({columns[i], info});
     }
     table = input_table;
 } // Table()
@@ -36,11 +50,16 @@ Table::Table(string &tb_name, vector<string> &columns, vector<string> &column_ty
 // Input: vector<string> &column_types -> data types of columns
 // Input: ::database::Table &input_table -> table
 Table::Table(string &tb_name, vector<string> &columns, vector<string> &column_types, vector<bool> &nullable_list) {
+    // cout << "here1" << endl;
     table_name = tb_name;
     for(size_t i = 0; i < columns.size(); ++i) {
+        // cout << "here1" << endl;
         Info info = Info(i, column_types[i], nullable_list[i]);
-        column_indecies.emplace(columns[i], info);
+        column_indecies.insert({columns[i], info});
     }
+    /*for(auto it : column_indecies) {
+        cout << Table_Type_Name(it.second.type) << " " << it.first;
+    }*/
 } // Table()
 
 // Constructor
@@ -63,10 +82,11 @@ string Table::schema() {
         string column = it.first;
         result << Table_Type_Name(it.second.type) << " " << column;
         if(it.second.nullable) {
-            result << " NOT NULL" << "\n";
+            result << " NULL ";
         } else {
-            result << " NULL" << "\n";
+            result << " NOT NULL ";
         }
+        result << it.second.index << "\n";
     }
 
     return result.str();
@@ -86,19 +106,28 @@ string Table::schema() {
     throw out_of_range("No row found");
 } // get_row()
 
+
+// Filters and returns rows where each Entry@each column = the said comparison
+// Input: vector<string> columns -> columns being accessed
+// Input: vector<Entry> comparisons -> list of entries to compare each row entry@column to
+::database::Table Table::filter_all() {
+    return table;
+} // filter()
+
 // Filters and returns rows where each Entry@each column = the said comparison
 // Input: vector<string> columns -> columns being accessed
 // Input: vector<Entry> comparisons -> list of entries to compare each row entry@column to
 vector<::database::Row> Table::filter(vector<string> &columns, vector<::database::Entry> &comparisons) {
     vector<::database::Row> subset;
     vector<Info> indecies;
+    // cout << columns.size() << endl;
     
     for (string column : columns) {
+        // cout << "THE COLUMN: " << column << endl;
         Info index;
         index = column_info(column);
         indecies.push_back(index);
     }
-
     for(size_t i = 0; i < table.rows_size(); ++i) {
         bool good = check_row(table.rows(i), indecies, comparisons);
         if(good) {
@@ -153,6 +182,13 @@ void Table::edit_rows(vector<string> &columns,
                         vector<::database::Entry> &comparisons, 
                         vector<string> &edit_columns, 
                         vector<::database::Entry> &entries) {
+    cout << "           SIZES          " << endl;
+    cout << "---------------------------" << endl;
+    cout << "COLUMNS: " << columns.size() << endl;
+    cout << "COMPARISONS: " << comparisons.size() << endl;
+    cout << "EDIT COLUMNS: " << edit_columns.size() << endl;
+    cout << "ENTRIES: " << entries.size() << endl;
+    cout << "---------------------------" << endl;
     vector<Info> indecies;
     for (string column : columns) {
         Info index = column_info(column);
@@ -168,6 +204,7 @@ void Table::edit_rows(vector<string> &columns,
     // Loops through rows and edits the ones that fit comparisons
     for(size_t i = 0; i < table.rows_size(); ++i) {
         bool good = check_row(table.rows(i), indecies, comparisons);
+        // cout << "GOOD? " << good << endl;
         if(!good) {
             continue;
         }
@@ -181,6 +218,7 @@ void Table::edit_rows(vector<string> &columns,
         edit_row_indecies.push(i);
     }
 
+    cout << "EDIT ROWS SIZE: " << edit_row_indecies.size() << endl;
     // Loops through rows and edits the ones that fit comparisons
     while(!edit_row_indecies.empty()) {
         size_t index = edit_row_indecies.front();
@@ -220,8 +258,31 @@ void Table::edit_all(vector<string> &edit_columns,
 // Inserts row into database
 // Checks if row aligns with correct types
 // Input: ::database::row &row -> row being inserted
-void Table::insert(::database::Row &row) {
-    for(auto it : column_indecies) {
+void Table::insert(vector<string> columns, vector<::database::Entry> entries) {
+    ::database::Row* new_row = table.add_rows();
+    new_row->mutable_entries()->Reserve(column_indecies.size());
+    for(int i = 0; i < column_indecies.size(); ++i) {
+        new_row->add_entries();
+    }
+
+    for(int i = 0; i < columns.size(); ++i) {
+        auto it = column_indecies.find(columns[i]);
+        Info info = it->second;
+        ::database::Entry* edit_entry = new_row->mutable_entries(info.index);
+        edit_entry->CopyFrom(entries[i]);
+    }
+
+    for(auto it: column_indecies) {
+        Info info = it.second;
+        ::database::Entry entry = new_row->entries(info.index);
+        bool empty = entry.has_boolean() || entry.has_str() || entry.has_flt() || entry.has_num();
+        if(!info.nullable && empty) {
+            throw runtime_error("");
+        }
+    }
+    /*for(auto it : column_indecies) {
+        cout << "IN HERE: " << row.entries_size() << endl;
+        cout << "INDEX: " << it.second.index << endl;
         if(it.second.index > row.entries_size() - 1) {
             stringstream error_message;
             error_message << "ERROR: Row being inserted is too small! Row has " << row.entries_size() << " entries, when it is supposed to have " << column_indecies.size();
@@ -229,9 +290,7 @@ void Table::insert(::database::Row &row) {
         } else if(!correct_type(it.second, row.entries(it.second.index))) {
             throw type_mismatch(type_mismatch::error_type::INSERTION, get_type(row.entries(it.second.index)), get_type(it.second));
         }
-    }
-    ::database::Row* new_row = table.add_rows();
-    *new_row = row;
+    }*/
 } // insert()
 
 // Removes rows where each entry@each column = the said comparison
@@ -334,6 +393,7 @@ void Table::output_entry(::database::Entry& entry) {
  *************/
 
 Table::Info Table::column_info(const string &column) {
+    
     auto it = column_indecies.find(column);
     if(it == column_indecies.end()) {
         throw out_of_range("Column '" + column + "' Does Not Exist!");
@@ -351,6 +411,7 @@ bool Table::check_row(const ::database::Row &row, vector<Info> indecies, vector<
             throw type_mismatch(type_mismatch::error_type::COMPARISON, get_type(indecies[j]), get_type(comparisons[j]));
         }
         
+        // cout << row.entries(indecies[j].index).num() << " = " << comparisons[j].num() << endl;
         if(!google::protobuf::util::MessageDifferencer::Equals(row.entries(indecies[j].index), comparisons[j])) {
             good = false;
             break;

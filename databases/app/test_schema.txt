@@ -1,0 +1,2 @@
+INT day NOT NULL 1
+INT age NOT NULL 0

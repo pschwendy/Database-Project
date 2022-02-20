@@ -1,0 +1,13 @@
+CREATE DATABASE test;
+USE DATABASE test;
+CREATE TABLE type_test(integer INT NOT NULL, float1 FLOAT NOT NULL, float2 FLOAT NULL, str STRING NOT NULL, boolean BOOL NOT NULL);
+INSERT INTO type_test (integer, float1, str, boolean) VALUES (1, 2.2, "hello", true);
+INSERT INTO type_test (integer, float1, str, boolean) VALUES (1, 2.1, "hello", true);
+INSERT INTO type_test (integer, float1, str, boolean) VALUES (2, 2.2, "byebye", true);
+CREATE TABLE users_test(id INT NOT NULL, first_name STRING NOT NULL, last_name STRING NOT NULL);
+INSERT INTO type_test (integer, float1, str, float2, boolean) VALUES (2, 2.2, "seven", 3.2, true);
+INSERT INTO users_test (id, first_name, last_name) VALUES (0, "Peter", "Schwendeman");
+INSERT INTO users_test (id, first_name, last_name) VALUES (1, "Ash");
+INSERT INTO users_test (id, first_name, last_name) VALUES (1, "Ash", "Varma");
+SELECT * FROM type_test WHERE str="hello", boolean=true;
+SELECT name FROM users_test WHERE id=0;
