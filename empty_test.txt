@@ -1,0 +1,7 @@
+CREATE DATABASE empty_test;
+USE DATABASE empty_test;
+SELECT * FROM type_test;
+CREATE TABLE type_test(integer INT NOT NULL, float1 FLOAT NOT NULL, float2 FLOAT NULL, str STRING NOT NULL, boolean BOOL NOT NULL);
+SELECT first_name FROM users_test WHERE id=0;
+SELECT integer FROM type_test WHERE str="hello" AND boolean=true AND float1=2.1;
+SELECT * FROM type_test;

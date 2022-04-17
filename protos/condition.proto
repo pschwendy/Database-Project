@@ -1,0 +1,28 @@
+syntax = "proto2";
+
+package database;
+
+message Condition {
+    optional bool contradiction = 1;
+    optional string column = 2;
+    optional string entry = 3;
+    optional Condition next = 4;
+    optional Condition child = 5;
+    
+    enum Linker {
+        AND = 0;
+        OR = 1;
+    }
+
+    enum Comparator {
+        EQUALS = 0;
+        GREATER = 1;
+        LESS = 2;
+        GREATER_EQUAL = 3;
+        LESS_EQUAL = 4;
+        NOT_EQUALS = 5;
+    }
+
+    optional Comparator comparator = 6;
+    optional Linker linker = 7;
+}

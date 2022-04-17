@@ -11,7 +11,8 @@ cc_library(
     srcs = ["table.cpp"],
     hdrs = ["table.h"],
     deps = [
-        "//protos:table_cc_proto"
+        "//protos:table_cc_proto",
+        "//protos:condition_cc_proto"
     ],
     visibility = ["//visibility:public"],
 )
