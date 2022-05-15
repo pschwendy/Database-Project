@@ -7,3 +7,11 @@ cc_library(
 	],
 	visibility = ["//visibility:public"],
 )
+
+cc_binary(
+	name = "main",
+	srcs = ["main.cpp"],
+	deps = [
+		":storage_lib"
+	]
+)

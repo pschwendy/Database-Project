@@ -5,15 +5,15 @@
 // main.cpp
 
 
-//#include "driver/driver.h"
+#include "driver/driver.h"
 #include <iostream>
 
 using namespace std;
 
 int main() {
     cout << true << endl;
-    //Driver driver = Driver();
-    //driver.run(cin);
+    Driver driver = Driver();
+    driver.run(cin);
 }
 
 // USE DATABASE DB_NAME
