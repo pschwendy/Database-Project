@@ -16,7 +16,6 @@ namespace Storage {
     // Database name -> unordered map w/ (table -> schema, rows)
     // Wrap maps in class or use typename
     void read_data() {
-        return;
         string db_name;
 
         // string file = "/databases/databases.txt";
@@ -31,7 +30,6 @@ namespace Storage {
             return;
         }
 
-        cout << "here" << endl;
         while(databases >> db_name) {
             string path = path_to_database + db_name + "/";
             ifstream table_list(path + "tables.txt");
@@ -64,14 +62,15 @@ namespace Storage {
     }
 
     void create_database(string &db_name) {
-        string path = "/databases/" + db_name + "/";
-
+        string path = path_to_database + db_name + "/";
+        TableRouter tb_router = TableRouter(); 
+        router.insert({db_name, tb_router});
         if(check_database_exists(db_name)) {
             // use runtime_error
             throw std::runtime_error("Database " + db_name + " already exists.");
         }
 
-        ofstream append_db_list(database_list_path);
+        ofstream append_db_list(database_list_path, std::ofstream::app);
         if(!append_db_list.good()) {
             throw out_of_range("Error: Missing file - " + database_list_path);
         }
@@ -80,13 +79,29 @@ namespace Storage {
 
         fs::create_directory(path);
         std::ofstream { path + "tables.txt" };
-    };
+    }
+
+    void delete_database(string &db_name) {
+        string path = path_to_database + db_name + "/";
+        ifstream old_db_list_stream(database_list_path);
+        stringstream new_db_list;
+        
+        string input;
+        while(old_db_list_stream >> input) {
+            if(input == db_name) {
+                continue;
+            }
+            new_db_list << input << "\n";
+        }
+
+        ofstream new_db_list_stream(database_list_path);
+        new_db_list_stream << new_db_list.str();
+        fs::remove_all(path);
+    }
     
     void create_table(string &db_name, Table &table) {
-        TableRouter database = router[db_name];
-
-        string path = "/databases/" + db_name + "/";
-        ofstream table_list(path + "tables.txt");
+        string path = path_to_database + db_name + "/";
+        ofstream table_list(path + "tables.txt", std::ofstream::app);
         table_list << table.get_name() << "\n";
         table_list.close();
 
@@ -94,14 +109,14 @@ namespace Storage {
         string rows = path + table.get_name() + "_rows.txt";
         
         std::pair<string, string> table_paths = make_pair(schema, rows);
-        database.insert({table.get_name(), table_paths});
-
-        ofstream schema_file(table_paths.first, std::ofstream::trunc);
+        router[db_name].insert({table.get_name(), table_paths});
+        
+        ofstream schema_file(schema, std::ofstream::trunc);
         schema_file << table.schema();
         
-        ofstream rows_file(table_paths.second, std::ofstream::trunc);
+        ofstream rows_file(rows, std::ofstream::trunc);
         if(!table.serialize(&rows_file)) {
-            throw out_of_range("Cannot open or make file " + table_paths.second);
+            throw out_of_range("Cannot open or make file " + rows);
         }
     }
 
@@ -121,37 +136,47 @@ namespace Storage {
 
     Table read_table(string &db_name, string &table_name) {
         //auto database = router.find(db_name);
+        // router.print();
         TableRouter database = router[db_name];
         auto table_to_table_paths = database.find(table_name);
+        if(table_to_table_paths == database.end()) {
+            cout << "NO TABLE EXISTS: " << table_name << endl;
+            exit(0);
+        }
+        // cout << table_to_table_paths->first << endl;
         std::pair<string, string> table_paths = table_to_table_paths->second;
-
         ifstream schema(table_paths.first);
         vector<string> columns;
         vector<string> types;
         vector<bool> nullable_list;
+        vector<int> indecies;
 
         string input;
         string type;
         string column;
-        while(std::getline(std::cin, input)) {
+        while(std::getline(schema, input)) {
             stringstream line_reader(input);
             bool nullable_column = true;
             line_reader >> type;
-            schema >> column;
+            line_reader >> column;
             if(line_reader >> input && input == "NOT") {
+                line_reader >> input;
                 nullable_column = false;
             }
+            int index;
+            line_reader >> index;
             types.emplace_back(type);
             columns.emplace_back(column);
             nullable_list.push_back(nullable_column);
+            indecies.push_back(index);
+            // cout << "here11111 " << type << " " << column << " " << nullable_column << " " << index << endl;
         }
-
         ifstream rows(table_paths.second);
         ::database::Table parse_table;
         parse_table.ParseFromIstream(&rows);
         
         // ADD NULLABLE ROWS
-        return Table(table_name, columns, types, nullable_list, parse_table);
+        return Table(table_name, columns, types, nullable_list, indecies, parse_table);
         // return Table();
     }
 }

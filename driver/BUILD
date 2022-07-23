@@ -6,6 +6,24 @@ cc_test(
     ],
 )
 
+cc_binary(
+    name = "insert_test",
+    srcs = ["insert_test.cpp"],
+    deps = [
+        ":driver_lib",
+        ":test_lib",
+    ],
+)
+
+cc_binary(
+    name = "select_test",
+    srcs = ["select_test.cpp"],
+    deps = [
+        ":driver_lib",
+        ":test_lib",
+    ],
+)
+
 cc_library(
 	name = "driver_lib",
 	srcs = ["driver.cpp"],
@@ -13,6 +31,16 @@ cc_library(
 	deps = [
         "//storage:storage_lib",
         "//table:table_lib",
+	],
+    visibility = ["//visibility:public"],
+)
+
+cc_library(
+	name = "test_lib",
+	srcs = ["test_utils.cpp"],
+    hdrs = ["test_utils.h"],
+	deps = [
+        ":driver_lib",
 	],
     visibility = ["//visibility:public"],
 )

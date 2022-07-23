@@ -1,0 +1,8 @@
+USE DATABASE select_test;
+CREATE TABLE all(integer INT NOT NULL, float FLOAT NOT NULL, str STRING NOT NULL, boolean BOOL NOT NULL);
+INSERT INTO all (integer, float, str, boolean) VALUES (1, 2.2, "hello", true);
+INSERT INTO all (integer, float, str, boolean) VALUES ( -1, 1.0, "a", true);
+SELECT * FROM all;
+SELECT * FROM all WHERE integer=1;
+SELECT * FROM all WHERE boolean=true;
+SELECT * FROM all WHERE boolean=false;

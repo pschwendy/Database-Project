@@ -11,7 +11,6 @@
 using namespace std;
 
 int main() {
-    cout << true << endl;
     Driver driver = Driver();
     driver.run(cin);
 }

@@ -19,5 +19,3 @@ SELECT first_name, last_name FROM users_test WHERE id=0;
 SELECT * FROM users_test WHERE id=0 AND first_name="Ash";
 SELECT * FROM users_test WHERE id=1 OR first_name="Ash";
 SELECT * FROM users_test WHERE id=1;
-INSERT INTO type_test (integer, float1, str, boolean) VALUES (1, 3.2, "test", false);
-INSERT INTO type_test (integer, float1, str, boolean) VALUES (9, 1.1, "fun", false);

@@ -11,8 +11,16 @@
 #include <string>
 #include <vector>
 #include "protos/table.pb.h"
+#include "protos/condition.pb.h"
+
 
 using namespace std;
+template <typename T>
+class JoinMap {
+public:
+    unordered_map<T, size_t> j_map;
+};
+
 
 // Class for Singular Table in a database
 // Allows for insertion, updation, selection, serialization, and output
@@ -27,6 +35,7 @@ class Table {
         // Input: vector<string> &column_types -> data types of columns
         // Input: ::database::Table &input_table -> table
         Table(string &tb_name, vector<string> &columns, vector<string> &column_types, vector<bool> &nullable_list, ::database::Table &input_table);
+        Table(string &tb_name, vector<string> &columns, vector<string> &column_types, vector<bool> &nullable_list, vector<int> &indecies, ::database::Table &input_table);
 
         // Constructor
         // Constructs table given input columns and their types
@@ -54,12 +63,23 @@ class Table {
         ::database::Row get_row(string &column, 
                                     ::database::Entry comparison);
 
+        // Returns row at index
+        ::database::Row get_row(int i) {
+            return table.rows(i);
+        }
+
+        // Returns all rows
+        ::database::Table& filter_all();
+
         // Filters and returns rows where each Entry@each column = the said comparison
         // Input: vector<string> columns -> columns being accessed
         // Input: vector<Entry> comparisons -> list of entries to compare each row entry@column to
         vector<::database::Row> filter(vector<string> &columns, 
                                         vector<::database::Entry> &comparisons);
         
+        vector<::database::Row> filter(::database::Condition &top_condition);
+        vector<::database::Row> filter(vector<string> &select_columns, ::database::Condition &top_condition);
+
         // Filters and returns rows (created based on select_columns) where each Entry@each column = the said comparison
         // Input: vector<string> columns select_columns -> columns in final row
         // Input: vector<string> columns -> columns being accessed
@@ -67,6 +87,17 @@ class Table {
         vector<::database::Row> filter(vector<string> select_columns, 
                                                 vector<string> &columns, 
                                                 vector<::database::Entry> &comparisons);
+
+        // Maps out joining entry to rows
+        template<typename T>
+        JoinMap<T> map_out(string &column);
+
+        // Joins table specific entries with mapped out rows
+        template<typename T>
+        vector<::database::Row> join(Table& table_compare,
+                                JoinMap<T> &join_map,
+                                unordered_map<string, vector<pair<string, int> > > select_columns_map,
+                                string &column) ;
 
         // Finds and edits rows where each entry@each column = the said comparison
         // Changes rows to set entry@each edit_column = the said new entry
@@ -76,6 +107,10 @@ class Table {
         // Input: vector<::database::Entry> &entries -> new entries to update entries in edit_columns
         void edit_rows(vector<string> &columns, 
                         vector<::database::Entry> &comparisons, 
+                        vector<string> &edit_columns, 
+                        vector<::database::Entry> &entries);
+        
+        void edit_rows(::database::Condition &top_condition,
                         vector<string> &edit_columns, 
                         vector<::database::Entry> &entries);
 
@@ -88,13 +123,15 @@ class Table {
         // Inserts row into database
         // Checks if row aligns with correct types
         // Input: ::database::row &row -> row being inserted
-        void insert(::database::Row &row);
+        void insert(vector<string> columns, vector<::database::Entry> entries);
         
         // Removes rows where each entry@each column = the said comparison
         // Input: vector<string> columns -> columns being accessed
         // Input: vector<Entry> comparisons -> list of entries to compare each row entry@column to
         void remove_rows(vector<string> &columns, 
                             vector<::database::Entry> &comparisons);
+
+        void remove_rows(::database::Condition &top_condition);
         
         // Removes all rows in table
         void remove_all() {
@@ -134,19 +171,19 @@ class Table {
             type_mismatch(error_type e_type, string column_type, string entry_type) {
                 switch (e_type) {
                     case COMPARISON:
-                        error_message = "ERROR: Type Mismatch - Trying to compare Entry of type '" + entry_type + "' into Column of type '" + column_type + "'";
+                        error_message = "Type Mismatch - Trying to compare Entry of type '" + entry_type + "' into Column of type '" + column_type + "'";
                         break;
                     
                     case INSERTION:
-                        error_message = "ERROR: Type Mismatch - Trying to insert Entry of type '" + entry_type + "' into Column of type '" + column_type + "'";
+                        error_message = "Type Mismatch - Trying to insert Entry of type '" + entry_type + "' into Column of type '" + column_type + "'";
                         break;
 
                     case UPDATION:
-                        error_message = "ERROR: Type Mismatch - Trying to update Column of type '" + column_type + "' with Entry of type '" + entry_type + "'";
+                        error_message = "Type Mismatch - Trying to update Column of type '" + column_type + "' with Entry of type '" + entry_type + "'";
                         break;
 
                     default:
-                        error_message = "ERROR: Type Mismatch - Trying to compare Entry of type '" + entry_type + "' into Column of type '" + column_type + "'";
+                        error_message = "Type Mismatch - Trying to compare Entry of type '" + entry_type + "' into Column of type '" + column_type + "'";
                         break;
 
                 }
@@ -169,6 +206,18 @@ class Table {
             return info.type;
         }
         
+        template<typename T>
+        T get_value(::database::Entry& entry) {
+            if(entry.has_boolean()) {
+                return entry.boolean();
+            } else if(entry.has_num()) {
+                return entry.num();
+            } else if(entry.has_flt()) {
+                return entry.flt();
+            } else {
+                return entry.str();
+            }
+        }
         // Returns columns in order
         // CHECK WITH ASH
         vector<string> columns() {
@@ -215,6 +264,9 @@ class Table {
         Info column_info(const string &column);
         
         bool check_row(const ::database::Row &row, vector<Info> indecies, vector<::database::Entry> &comparisons);
+        bool check_row(const ::database::Row &row, const ::database::Condition &condition);
+        template<typename T> 
+        bool compare_entries(T lhs, T rhs, ::database::Condition_Comparator comparator);
         bool compare_entries(const ::database::Entry &lhs, const ::database::Entry &rhs);
         bool correct_type(Info info, const ::database::Entry &entry);
         

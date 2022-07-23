@@ -1,0 +1,5 @@
+BOOL boolean NOT NULL 4
+FLOAT float2 NULL 2
+FLOAT float1 NOT NULL 1
+STRING str NOT NULL 3
+INT integer NOT NULL 0

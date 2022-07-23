@@ -1,0 +1,9 @@
+USE DATABASE insert_test;
+CREATE TABLE incomplete(integer INT NOT NULL, float1 FLOAT NOT NULL, str STRING NOT NULL, boolean BOOL NOT NULL);
+INSERT INTO incomplete (integer, str, float1) VALUES (1, "hello", 2.2, true);
+INSERT INTO incomplete (integer, str, float1) VALUES (1, "hello", 2.2);
+INSERT INTO incomplete (integer, str, float1, boolean) VALUES (1, "hello", 2.2);
+CREATE TABLE incomplete2(integer INT NULL, float1 FLOAT NOT NULL, str STRING NOT NULL, boolean BOOL NOT NULL);
+INSERT INTO incomplete2 (str, float1, integer) VALUES ("a", 1.0, -1, true);
+INSERT INTO incomplete2 (str, float1, integer) VALUES ("a", 1.0, -1);
+INSERT INTO incomplete2 (str, float1) VALUES ("a", 1.0);

@@ -1,0 +1,3 @@
+USE DATABASE insert_test;
+CREATE TABLE empty();
+INSERT INTO empty (integer, float1, str, boolean) VALUES (1, 2.2, "hello", true);

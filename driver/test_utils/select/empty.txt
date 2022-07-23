@@ -1,0 +1,3 @@
+USE DATABASE select_test;
+CREATE TABLE empty();
+SELECT * FROM empty;

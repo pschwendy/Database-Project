@@ -36,23 +36,23 @@ class Driver {
         void parse_insert(stringstream &input);
         void parse_delete(stringstream &input);
         void parse_update(stringstream &input);
-        void parse_create(string &input);
-
+        void parse_create(stringstream &input);
+        void parse_join(stringstream &input, string &statement);
     private:
         // Database* db;
         string db_name;
         bool using_db;
 
         void parse_input(string &input);
-        void add_entry_to_row(Table &table, string &column_name, string &entry_name, ::database::Row entries);
-        void add_entry_to_row(Table &table, string &column_name, string &entry_name, vector<::database::Entry> entries);
+        void add_entry_to_row(Table &table, string &column_name, string &entry_name, ::database::Row &entries);
+        void add_entry_to_row(Table &table, string &column_name, string &entry_name, vector<::database::Entry> &entries);
         void set_entry_value(::database::Entry &entry, string &entry_name, string &column_name, Table &table);
-        void construct_columns_and_entries(vector<string> &columns, vector<::database::Entry> &entries, string &statement, Table &table);
-        // Add preprocessing project
-        /*string preprocess_input(string &input);
-        void parse_select(stringstream &input)
-        void parse_insert(stringstream &input)
-        void parse_delete(stringstream &input)*/
+        void construct_conditions_comma(vector<string> &columns, vector<::database::Entry> &entries, string &statement, Table &table);
+        void construct_conditions_comma(vector<string> &columns, vector<::database::Entry> &entries, stringstream &input, Table &table);
+        void construct_conditions(vector<string> &columns, vector<::database::Entry> &entries, string &statement, Table &table);
+        void construct_conditions(vector<string> &columns, vector<::database::Entry> &entries, stringstream &input, Table &table);
+        ::database::Condition read_conditions(stringstream &input, Table &table);
+        void read_string(string &str, stringstream& input);
 };
 
 #endif // Driver_h

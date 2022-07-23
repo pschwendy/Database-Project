@@ -1,0 +1,8 @@
+USE DATABASE select_test;
+CREATE TABLE columns(integer INT NOT NULL, float FLOAT NOT NULL, str STRING NOT NULL, boolean BOOL NOT NULL);
+INSERT INTO columns (integer, float, str, boolean) VALUES (1, 2.2, "hello", true);
+INSERT INTO columns (integer, float, str, boolean) VALUES ( -1, 1.0, "a", true);
+SELECT integer FROM columns;
+SELECT str, float FROM columns WHERE integer=1;
+SELECT float, str FROM columns WHERE boolean=true;
+SELECT integer, float, str, boolean FROM columns WHERE boolean=false;

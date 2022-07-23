@@ -1,0 +1,6 @@
+USE DATABASE insert_test;
+CREATE TABLE nullable_columns(integer INT NOT NULL, float1 FLOAT NOT NULL, float2 FLOAT NULL, str STRING NULL, boolean BOOL NOT NULL);
+INSERT INTO nullable_columns (integer, float1, float2, str, boolean) VALUES (1, 2.0, 2.1, "hello", true);
+INSERT INTO nullable_columns (integer, float1, str, boolean) VALUES (1, 2.2, "hello", true);
+INSERT INTO nullable_columns (integer, float1, float2, boolean) VALUES (1, 2.2, 2.4, true);
+INSERT INTO nullable_columns (integer, float1, boolean) VALUES (1, 2.2, true);

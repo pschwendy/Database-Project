@@ -1,0 +1,3 @@
+INT id NOT NULL 0
+STRING last_name NOT NULL 2
+STRING first_name NOT NULL 1
