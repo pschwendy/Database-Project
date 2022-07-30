@@ -23,7 +23,6 @@ void Driver::run(istream& in) {
             input = preprocess_input(input);
             cout << input << endl;
             parse_input(input);
-            cout << "here6" << endl;
         } catch (runtime_error e) {
             cout << "ERROR: " << e.what() << endl;
         } catch (out_of_range e) {
@@ -32,9 +31,8 @@ void Driver::run(istream& in) {
             cout << "ERROR: " << e.what() << endl;
         }
         cout << "# ";
-        cout << "here7" << endl;
     }
-    cout << "here8" << endl;
+    cout << endl;
 } // run()
 
 /*************
@@ -405,7 +403,7 @@ void Driver::parse_insert(stringstream &input) {
     // cout << "COLUMNS SIZE: " << insert_columns.size() << endl;
 
     for(int i = 0; i < insert_columns.size(); ++i) {
-        input >> statement;
+        if(!(input >> statement)) break;
         string entry_name;
         for(int j = 0; statement[j] != ',' && statement[j] != ')'; ++j) {
             if(statement[j] == '"') {
@@ -417,10 +415,12 @@ void Driver::parse_insert(stringstream &input) {
         add_entry_to_row(table, insert_columns[i], entry_name, entries);
     }
 
+    if(insert_columns.size() != entries.size()) {
+        throw runtime_error("Number of columns does not match number of entries.");
+    }
+
     table.insert(insert_columns, entries);
-    cout << "here4 " << db_name << endl;
     Storage::write_table(db_name, table);
-    cout << "here5" << endl;
 }
 
 void Driver::parse_delete(stringstream &input) {

@@ -434,23 +434,22 @@ void Table::insert(vector<string> columns, vector<::database::Entry> entries) {
     for(int i = 0; i < column_indecies.size(); ++i) {
         new_row->add_entries();
     }
-    cout << "here1" << endl;
+
     for(int i = 0; i < columns.size(); ++i) {
         auto it = column_indecies.find(columns[i]);
         Info info = it->second;
         ::database::Entry* edit_entry = new_row->mutable_entries(info.index);
         edit_entry->CopyFrom(entries[i]);
     }
-    cout << "here2" << endl;
+
     for(auto it: column_indecies) {
         Info info = it.second;
         ::database::Entry entry = new_row->entries(info.index);
         bool full = entry.has_boolean() || entry.has_str() || entry.has_flt() || entry.has_num();
         if(!info.nullable && !full) {
-            throw runtime_error("UMMM");
+            throw runtime_error("Trying to insert NULL value in NOT NULL columns");
         }
     }
-    cout << "here3" << endl;
 } // insert()
 
 // Removes rows where each entry@each column = the said comparison
