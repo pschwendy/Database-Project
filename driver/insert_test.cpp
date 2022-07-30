@@ -73,16 +73,21 @@ void types_test(Driver& driver) {
     
     ::database::Condition integer_check = ::create_equals_condition("integer", "1");
     ::database::Condition negative_integer_check = create_equals_condition("integer", "-1");
-    ::database::Condition string_integer_check = create_equals_condition("str", "a");
+    ::database::Condition string_check = create_equals_condition("str", "a");
     ::database::Condition float_check = create_equals_condition("float1", "2.2");
     ::database::Condition boolean_check = create_equals_condition("boolean", "true");
     
     assert(table.filter_all().rows_size() == 2);
     assert(table.filter(integer_check).size() == 1);
     assert(table.filter(negative_integer_check).size() == 1);
-    assert(table.filter(string_integer_check).size() == 1);
+    assert(table.filter(string_check).size() == 1);
     assert(table.filter(float_check).size() == 1);
     assert(table.filter(boolean_check).size() == 2);
+
+    assert(table.filter(integer_check)[0].entries(2).str() == "hello");
+    assert(table.filter(negative_integer_check)[0].entries(2).str() == "a");
+    assert(table.filter(string_check)[0].entries(1).flt() == 1.0);
+    assert(table.filter(float_check)[0].entries(1).flt() == 2.2f);
 } // types_test()
 
 void skip_nullable_columns_test(Driver& driver) {
@@ -96,10 +101,13 @@ void skip_nullable_columns_test(Driver& driver) {
 
     Condition nullable_float_check = create_equals_condition("float2", "2.1");
     Condition nullable_string_check = create_equals_condition("str", "hello");
+    Condition nullable_integer_check = create_equals_condition("integer", "11");
     
     assert(table.filter_all().rows_size() == 4);
     assert(table.filter(nullable_float_check).size() == 1);
     assert(table.filter(nullable_string_check).size() == 2);
+
+    assert(table.filter(nullable_integer_check)[0].entries(2).has_flt() == false);
 } // skip_nullable_columns_test()
 
 void type_mismatch_test(Driver& driver) {
@@ -125,25 +133,7 @@ void incomplete_insertion_test(Driver& driver) {
     
     string tb_name2 = "incomplete2";
     Table table2 = Storage::read_table(db_name, tb_name);
-
-    auto rows = table.filter_all();
-    for(int i = 0; i < rows.rows_size(); ++i) {
-        ::database::Row row = rows.rows(i);
-        for(int j = 0; j < row.entries_size(); ++j) {
-            ::database::Entry entry = row.entries(j);
-            if(entry.has_str()) {
-                cout << entry.str();
-            } else if(entry.has_flt()) {
-                cout << entry.flt();
-            } else if(entry.has_num()) {
-                cout << entry.num();
-            } else if(entry.has_boolean()) {
-                cout << entry.boolean();
-            }
-            cout << " | ";
-        }
-        cout << endl;
-    }
+    
     assert(table.filter_all().rows_size() == 0);
     assert(table2.filter_all().rows_size() == 0);
 } // incomplete_insertion_test()
