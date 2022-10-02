@@ -1,0 +1,3 @@
+USE DATABASE update_test;
+CREATE TABLE empty();
+UPDATE empty SET a="abc";

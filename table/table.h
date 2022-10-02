@@ -71,6 +71,9 @@ class Table {
         // Returns all rows
         ::database::Table& filter_all();
 
+        // Returns all rows
+        ::database::Table filter_all(vector<string> &select_columns);
+
         // Filters and returns rows where each Entry@each column = the said comparison
         // Input: vector<string> columns -> columns being accessed
         // Input: vector<Entry> comparisons -> list of entries to compare each row entry@column to

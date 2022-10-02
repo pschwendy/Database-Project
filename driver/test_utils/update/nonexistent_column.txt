@@ -1,0 +1,6 @@
+USE DATABASE update_test;
+CREATE TABLE nonexistent_column(integer INT NOT NULL, float FLOAT NOT NULL, str STRING NOT NULL, boolean BOOL NOT NULL);
+INSERT INTO nonexistent_column (integer, float, str, boolean) VALUES (1, 2.2, "hello", true);
+INSERT INTO nonexistent_column (integer, float, str, boolean) VALUES ( -1, 1.0, "a", true);
+UPDATE nonexistent_column SET blue=4;
+UPDATE nonexistent_column SET integer=2, float=2.2, blue=4;

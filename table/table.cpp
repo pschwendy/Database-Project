@@ -114,6 +114,29 @@ string Table::schema() {
     return table;
 } // filter()
 
+// Filters and returns specified rows where condition set is met
+::database::Table Table::filter_all(vector<string> &select_columns) {
+    ::database::Table subset;
+
+    vector<Info> return_entries;
+
+    for (string column : select_columns) {
+        Info index;
+        index = column_info(column);
+        return_entries.push_back(index);
+    }
+
+
+    for(size_t i = 0; i < table.rows_size(); ++i) {
+        ::database::Row* row = subset.add_rows();
+        for(Info info: return_entries) {
+            ::database::Entry *entry = row->add_entries();
+            entry->CopyFrom(table.rows(i).entries(info.index));
+        }
+    }
+    return subset;
+} // filter() 2
+
 // Filters and returns rows where each Entry@each column = the said comparison
 // Input: vector<string> columns -> columns being accessed
 // Input: vector<Entry> comparisons -> list of entries to compare each row entry@column to
@@ -376,7 +399,20 @@ void Table::edit_rows(::database::Condition &top_condition,
     // Loops through rows and edits the ones that fit comparisons
     for(size_t i = 0; i < table.rows_size(); ++i) {
         bool good = check_row(table.rows(i), top_condition);
-        // cout << "GOOD? " << good << endl;
+        for(int j = 0; j < table.rows(i).entries_size(); ++j) {
+            ::database::Entry entry = table.rows(i).entries(j);
+            if(entry.has_str()) {
+                cout << entry.str();
+            } else if(entry.has_flt()) {
+                cout << entry.flt();
+            } else if(entry.has_num()) {
+                cout << entry.num();
+            } else if(entry.has_boolean()) {
+                cout << entry.boolean();
+            }
+            cout << " | ";
+        }
+        cout << "GOOD? " << good << endl;
         if(!good) {
             continue;
         }
@@ -384,11 +420,14 @@ void Table::edit_rows(::database::Condition &top_condition,
         // Edits each specified entry in row
         for(size_t j = 0; j < entries.size(); ++j) {
             if(!correct_type(edit_indecies[j], entries[j])) {
+                // UPDATE table SET integer="stie" WHERE ( a > b );
                 throw type_mismatch(type_mismatch::error_type::UPDATION, get_type(edit_indecies[j]), get_type(entries[j]));
             }
         }
         edit_row_indecies.push(i);
     }
+
+    cout << "EDIT ROWS SIZE: " << edit_row_indecies.size() << endl;
 
     while(!edit_row_indecies.empty()) {
         size_t index = edit_row_indecies.front();
@@ -615,7 +654,11 @@ bool Table::check_row(const ::database::Row &row, const ::database::Condition &c
         switch(column_type(condition.column())) {
             case ::database::Table_Type_BOOL:
                 bool val_b;
-                type_converter >> val_b;
+                if(type_converter.str()[0] == '1' || type_converter.str()[0] == '0') {
+                    type_converter >> std::noboolalpha >> val_b;
+                } else {
+                    type_converter >> std::boolalpha >> val_b;
+                }
                 //good = comparator(row.entries(col_index).boolean(), val_b);
                 good = compare_entries<bool>(row.entries(col_index).boolean(), val_b, condition.comparator());
                 break;
@@ -645,9 +688,15 @@ bool Table::check_row(const ::database::Row &row, const ::database::Condition &c
         }
     }    
 
+    if(condition.has_contradiction() && condition.contradiction()) {
+        cout << "IN HERE CONTRADICT" << endl;
+        good = !good;
+    }
+
     if(condition.has_next()) {
         switch(condition.linker()) {
             case ::database::Condition::AND:
+                cout << "Current: " << good << endl; 
                 return good && check_row(row, condition.next());
             case ::database::Condition::OR:
                 return good || check_row(row, condition.next());

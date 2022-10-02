@@ -1,0 +1,6 @@
+USE DATABASE update_test;
+CREATE TABLE type_mistmatch(integer INT NOT NULL, float FLOAT NOT NULL, str STRING NOT NULL, boolean BOOL NOT NULL);
+INSERT INTO type_mistmatch (integer, float, str, boolean) VALUES (1, 2.2, "hello", true);
+INSERT INTO type_mistmatch (integer, float, str, boolean) VALUES ( -1, 1.0, "a", true);
+UPDATE type_mistmatch SET integer="abc";
+UPDATE type_mistmatch SET float=1.2, boolean=false, integer="abc";

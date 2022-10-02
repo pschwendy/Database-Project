@@ -12,7 +12,7 @@ using namespace std;
 
 int main() {
     Driver driver = Driver();
-    driver.run(cin);
+    driver.run(cin, cout);
 }
 
 // USE DATABASE DB_NAME

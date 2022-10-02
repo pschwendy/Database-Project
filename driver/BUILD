@@ -24,6 +24,15 @@ cc_binary(
     ],
 )
 
+cc_binary(
+    name = "update_test",
+    srcs = ["update_test.cpp"],
+    deps = [
+        ":driver_lib",
+        ":test_lib",
+    ],
+)
+
 cc_library(
 	name = "driver_lib",
 	srcs = ["driver.cpp"],

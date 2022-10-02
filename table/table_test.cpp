@@ -15,6 +15,9 @@ using namespace std;
 ::database::Row make_row(int x = 0, int x1 = 0, float y = 0, float y1 = 0, string str = "", string str1 = "", bool b = false);
 ::database::Entry make_entry(Table* table, string column, int a, float b, string c, bool d);
 
+void standard_insert_test(Table &table);
+void insert_out_of_order_test(Table &table);
+void insert_nullable_columns_test(Table &table);
 void bad_insertion_test_wrong_size(Table &table);
 void bad_insertion_test_type_mismatch(Table &table);
 
@@ -60,12 +63,14 @@ int main() {
     table.insert(row4);
     table.insert(row5);
     
-    /* --- Table Created ---
-        1 | 1.2 | 3.0 | friend | true
-        -8347 | 11.2 | 43.0 | hello | true
-        123 | 11.2 | -12.0 | hello | true
-        -1 | -298.2f | 3.2 | nah | true   
-    */
+    /* -------------- Table Created ----------------
+     *   int   | float1  | float2 | string | boolean
+     *   INT   | FLOAT   | FLOAT  | STRING | BOOL
+     *   1     | 1.2     | 3.0    | friend | true
+     *   -8347 | 11.2    | 43.0   | hello  | true
+     *   123   | 11.2    | -12.0  | hello  | true
+     *   -1    | -298.2f | 3.2    | nah    | true   
+    **/
     
     cout << "---Finished Creating Table---" << endl;
     

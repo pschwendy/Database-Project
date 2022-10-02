@@ -6,6 +6,8 @@
 
 #include "driver.h"
 #include <stack>
+#include <memory>
+#include <iomanip>
 
 using namespace std;
 
@@ -14,39 +16,39 @@ using namespace std;
  ************/
 
 // Opens shell for input database commands
-void Driver::run(istream& in) {
+void Driver::run(istream& in, ostream& out) {
     Storage::read_data();
     string input;
-    cout << "# ";
+    out << "# ";
     while(getline(in, input, ';')) {
         try {
             input = preprocess_input(input);
-            cout << input << endl;
-            parse_input(input);
+            // out << input << endl;
+            parse_input(input, out);
         } catch (runtime_error e) {
-            cout << "ERROR: " << e.what() << endl;
+            out << "ERROR: " << e.what() << endl;
         } catch (out_of_range e) {
-            cout << "ERROR: " << e.what() << endl;
+            out << "ERROR: " << e.what() << endl;
         } catch (Table::type_mismatch e) {
-            cout << "ERROR: " << e.what() << endl;
+            out << "ERROR: " << e.what() << endl;
         }
-        cout << "# ";
+        out << "# ";
     }
-    cout << endl;
+    out << endl;
 } // run()
 
 /*************
  *  PRIVATE  *
  *************/
 
-void Driver::parse_input(string &input) {
+void Driver::parse_input(string &input, ostream &out) {
     stringstream ss(input);
 
     string command;
     ss >> command;
 
     if((command == "SELECT" || command == "select") && using_db) {
-        parse_select(ss);
+        parse_select(ss, out);
     } else if((command == "INSERT" || command == "insert") && using_db) {
         parse_insert(ss);
     } else if((command == "UPDATE" || command == "update") && using_db) {
@@ -119,7 +121,12 @@ void Driver::set_entry_value(::database::Entry &entry, string &entry_name, strin
     stringstream entry_name_ss(entry_name);
     switch(table.column_type(column_name)) {
         case ::database::Table_Type_BOOL:
-            entry_name_ss >> b_value;
+            if(entry_name_ss.str()[0] == '1' || entry_name_ss.str()[0] == '0') {
+                entry_name_ss >> std::noboolalpha >> b_value;
+            } else {
+                entry_name_ss >> std::boolalpha >> b_value;
+            }
+            
             entry.set_boolean(b_value);
             break;
         
@@ -166,7 +173,26 @@ string Driver::preprocess_input(string &input) {
             remove_space = true;
             continue;
         
-        } else if(input[i] == '(') {
+        } else if(input[i] == '>' && new_input[new_input.length()-1] == ' ') {
+            new_input[new_input.length() - 1] = '>';
+            remove_space = true;
+            continue;
+        
+        } else if(input[i] == '<' && new_input[new_input.length()-1] == ' ') {
+            new_input[new_input.length() - 1] = '<';
+            remove_space = true;
+            continue;
+        
+        } else if(input[i] == '!' && new_input[new_input.length()-1] == ' ') {
+            if(i + 1 < input.length() && input[i + 1] == '=') {
+                new_input[new_input.length() - 1] = '!';
+                new_input += '=';
+                ++i;
+                remove_space = true;
+            }
+            continue;
+        
+        } else if(input[i] == '(' || input[i] == ')') {
             if(new_input[new_input.length()-1] != ' ')
                 new_input += " ";
             new_input += input[i];
@@ -177,11 +203,11 @@ string Driver::preprocess_input(string &input) {
         
         new_input += input[i];
     }
-
+    // cout << new_input << endl;
     return new_input;
 } // preprocess_input()
 
-void Driver::parse_select(stringstream &input) {
+void Driver::parse_select(stringstream &input, ostream &out) {
     bool select_all_columns = false;
     vector<string> select_columns;
     
@@ -194,7 +220,7 @@ void Driver::parse_select(stringstream &input) {
     if(!select_all_columns) {
         for(int i = 0; i < statement.length(); ++i) {
             if(statement[i] == '.') {
-                parse_join(input, statement);
+                parse_join(input, statement, out);
                 return;
             } 
         }
@@ -202,40 +228,26 @@ void Driver::parse_select(stringstream &input) {
         if (statement[statement.length() - 1] == ',' || statement[statement.length() - 1] == ')') {
             statement.pop_back();
             select_columns.emplace_back(statement);
+            while(input >> statement) {
+                cout << statement << endl;
+                if (statement[statement.length() - 1] == ',' || statement[statement.length() - 1] == ')') {
+                    statement.pop_back();
+                    select_columns.emplace_back(statement);
+                } else {
+                    select_columns.emplace_back(statement);
+                    break;
+                }
+            }
         } else {
             select_columns.emplace_back(statement);
         }
 
-        while(input >> statement) {
-            if(select_all_columns) {
-                break;
-            }
-            if (statement[statement.length() - 1] == ',' || statement[statement.length() - 1] == ')') {
-                statement.pop_back();
-                select_columns.emplace_back(statement);
-            } else {
-                select_columns.emplace_back(statement);
-                break;
-            }
-        }
+        
     }
-
     
-/*
-    for(int i = 0; i < statement.length(); ++i) {
-        string select_column;
-        while(statement[i] != ',') {
-            select_column += statement[i];
-            ++i;
-        }
-
-        select_columns.emplace_back(select_column);
-    }
-*/
     input >> statement;
-    cout << "STATEMENT BEFORE BAD: " << statement << endl;
     if(statement != "FROM") {
-        throw std::runtime_error("Bad"); // Add nicer error message
+        throw std::runtime_error("FROM not specified"); // Add nicer error message
     }
 
     string table_name;
@@ -247,54 +259,98 @@ void Driver::parse_select(stringstream &input) {
         vector<::database::Entry> entries;
 
         // construct_conditions(columns, entries, input, table);
-        ::database::Condition top_condition = read_conditions(input, table);
+        auto top_condition = read_conditions(input, table);
         // cout << "UMMMMMMM" << endl;
         vector<::database::Row> rows;
         if(select_all_columns) {
-            rows = table.filter(top_condition);
+            try {
+                rows = table.filter(*top_condition);
+            } catch(std::out_of_range &e) {
+                delete top_condition;
+                out << e.what() << endl;
+                return;
+            } catch(std::runtime_error &e) {
+                delete top_condition;
+                out << e.what() << endl;
+                return;
+            } catch(Table::type_mismatch &e) {
+                delete top_condition;
+                out << e.what() << endl;
+                return;
+            }
         } else {
-            rows = table.filter(select_columns, top_condition);
+            try {
+                rows = table.filter(select_columns, *top_condition);
+            } catch(std::out_of_range &e) {
+                delete top_condition;
+                out << e.what() << endl;
+                return;
+            } catch(std::runtime_error &e) {
+                delete top_condition;
+                out << e.what() << endl;
+                return;
+            } catch(Table::type_mismatch &e) {
+                delete top_condition;
+                out << e.what() << endl;
+                return;
+            }
         }
+        delete top_condition;
         // cout << "UHHHHH" << endl;
         for(int i = 0; i < rows.size(); ++i) {
             ::database::Row row = rows[i];
             for(int j = 0; j < row.entries_size(); ++j) {
                 ::database::Entry entry = row.entries(j);
                 if(entry.has_str()) {
-                    cout << entry.str();
+                    out << entry.str();
                 } else if(entry.has_flt()) {
-                    cout << entry.flt();
+                    out << entry.flt();
                 } else if(entry.has_num()) {
-                    cout << entry.num();
+                    out << entry.num();
                 } else if(entry.has_boolean()) {
-                    cout << entry.boolean();
+                    out << entry.boolean();
                 }
-                cout << " | ";
+                out << " | ";
             }
-            cout << endl;
+            out << endl;
         }
     } else {
-        ::database::Table rows = table.filter_all();
+        ::database::Table rows;
+        if(select_all_columns)
+            rows = table.filter_all();
+        else
+            rows = table.filter_all(select_columns);
         for(int i = 0; i < rows.rows_size(); ++i) {
             ::database::Row row = rows.rows(i);
             for(int j = 0; j < row.entries_size(); ++j) {
                 ::database::Entry entry = row.entries(j);
                 if(entry.has_str()) {
-                    cout << entry.str();
+                    out << entry.str();
                 } else if(entry.has_flt()) {
-                    cout << entry.flt();
+                    out << entry.flt();
                 } else if(entry.has_num()) {
-                    cout << entry.num();
+                    out << entry.num();
                 } else if(entry.has_boolean()) {
-                    cout << entry.boolean();
+                    out << entry.boolean();
                 }
-                cout << " | ";
+                out << " | ";
             }
-            cout << endl;
+            out << endl;
         }
     }
 }
 
+void Driver::print_entry(::database::Entry &entry, ostream &out) {
+    if(entry.has_str()) {
+        out << entry.str();
+    } else if(entry.has_flt()) {
+        out << entry.flt();
+    } else if(entry.has_num()) {
+        out << entry.num();
+    } else if(entry.has_boolean()) {
+        out << entry.boolean();
+    }
+}
 
 void Driver::parse_update(stringstream &input) {
     vector<string> select_columns;
@@ -303,6 +359,7 @@ void Driver::parse_update(stringstream &input) {
     
     string table_name;
     input >> table_name;
+    cout << "TABLE NAME: " << table_name << endl;
     Table table = Storage::read_table(db_name, table_name);
 
     input >> statement;
@@ -324,12 +381,26 @@ void Driver::parse_update(stringstream &input) {
         
         // input >> statement;
         // construct_conditions(columns, entries, input, table);
-        ::database::Condition top_condition = read_conditions(input, table);
-        table.edit_rows(top_condition, edit_columns, edit_entries);
+        auto top_condition = read_conditions(input, table);
+        try {
+            table.edit_rows(*top_condition, edit_columns, edit_entries);
+            delete top_condition;
+        } catch(std::out_of_range &e) {
+            delete top_condition;
+            throw e;
+        } catch(std::runtime_error &e) {
+            delete top_condition;
+            throw e;
+        } catch(Table::type_mismatch &e) {
+            delete top_condition;
+            throw e;
+        }
+        
         // cout << "DONEEEEEEEEE" << endl;
     } else {
         table.edit_all(edit_columns, edit_entries);
     }
+
     ::database::Table rows = table.filter_all();
     for(int i = 0; i < rows.rows_size(); ++i) {
         ::database::Row row = rows.rows(i);
@@ -377,6 +448,7 @@ void Driver::parse_insert(stringstream &input) {
         bool end_loop = false;
         // cout << "THE FIRST STATEMENT: " << statement << endl;
         while(!end_loop && input >> statement) {
+            if(statement == ")") break;
             // cout << "THE STATEMENT: " << statement << endl;
             if(statement[statement.length() - 1] == ',') {
                 statement.pop_back();
@@ -404,6 +476,7 @@ void Driver::parse_insert(stringstream &input) {
 
     for(int i = 0; i < insert_columns.size(); ++i) {
         if(!(input >> statement)) break;
+        else if(statement == ")") break;
         string entry_name;
         for(int j = 0; statement[j] != ',' && statement[j] != ')'; ++j) {
             if(statement[j] == '"') {
@@ -440,8 +513,8 @@ void Driver::parse_delete(stringstream &input) {
         
         // input >> statement;
         // construct_conditions(columns, entries, input, table);
-        ::database::Condition top_condition = read_conditions(input, table);
-        table.remove_rows(top_condition);
+        auto top_condition = read_conditions(input, table);
+        table.remove_rows(*top_condition);
     } else {
         // Add specific rows
         table.remove_all();
@@ -485,7 +558,6 @@ void Driver::construct_conditions(vector<string> &columns, vector<::database::En
             column_name += statement[i];
             ++i;
         }
-        cout << "COLUMN NAME: " << column_name << endl;
         ++i;
 
         while(i < statement.length()) {
@@ -509,6 +581,7 @@ void Driver::construct_conditions_comma(vector<string> &columns, vector<::databa
     string statement;
     bool stop = false;
     while(!stop && input >> statement) {
+        cout << "STATEMENT: " << statement << endl;
         if(statement[statement.length() - 1] != ',') {
             stop = true;
         }
@@ -519,10 +592,9 @@ void Driver::construct_conditions_comma(vector<string> &columns, vector<::databa
             column_name += statement[i];
             ++i;
         }
-        cout << "COLUMN NAME: " << column_name << endl;
         ++i;
 
-        while(statement[i] != ',') {
+        while(statement[i] != ',' && i < statement.length()) {
             if(statement[i] == '"') {
                 ++i;
                 continue;
@@ -531,86 +603,157 @@ void Driver::construct_conditions_comma(vector<string> &columns, vector<::databa
             ++i;
         }
 
+        cout << "ENTRY NAME: " + entry_name << endl;
+
         add_entry_to_row(table, column_name, entry_name, entries);
         columns.emplace_back(column_name);
     }
 }
 
 // Reads conditions and creates condition node data structure
-::database::Condition Driver::read_conditions(stringstream &input, Table &table) {
-    stack<::database::Condition> reader;
+// TODO: switch to shared ptr or unique ptr
+::database::Condition* Driver::read_conditions(stringstream &input, Table &table) {
+    stack<::database::Condition*> reader;
     string statement;
     while(input >> statement) {
         if(statement[0] == '(') {
             // Push blank condition to stack
-            ::database::Condition condition;
+            ::database::Condition* condition = new ::database::Condition();
             reader.push(condition);
 
         } else if(statement[0] == ')') {
-            // Pop all condition until you reach overarching condition
-            ::database::Condition condition;
-            while(!reader.top().has_child() && !reader.top().has_column()) {
+            // Pop all conditions until you reach overarching condition
+            // If top condition has a child or column, we can discern it isn't the overarching condition
+            // Ex: ( a AND ( b OR c ) ) -> stack: overarching, has_column, has_child
+            /* !reader.top().has_child() && !reader.top().has_column() */
+            // WHERE ( a AND b 
+            // WHERE )
+            // Option 1
+            auto condition = reader.top();
+            reader.pop();
+            while(reader.top()->has_child() || reader.top()->has_column()) {
+                auto top_condition_next = reader.top()->mutable_next();
+                top_condition_next = condition;
                 condition = reader.top();
                 reader.pop();
-                reader.top().set_allocated_next(&condition);
             }
 
-            condition = reader.top();
-            reader.pop();
-            reader.top().set_allocated_child(&condition);
+            auto top_condition_child = reader.top()->mutable_child();
+            top_condition_child = condition;
+
+            // Option 2
+            // ::database::Condition* condition;
+            // while(reader.top()->has_child() || reader.top()->has_column()) {
+            //     condition = reader.top();
+            //     reader.pop();
+            //     ::database::Condition* top_condition_next = reader.top()->mutable_next();
+            //     top_condition_next = condition;
+            // }
+
+            // ::database::Condition* top_condition_child = reader.top()->mutable_child();
+            // top_condition_child = reader.top()->mutable_child();
+            // reader.top()->mutable_child() = nullptr;
 
         } else if(statement == "AND") {
+            // a < b AND a = c 
             // Set linker of previously read condition
-            reader.top().set_linker(::database::Condition_Linker_AND); 
+            reader.top()->set_linker(::database::Condition_Linker_AND); 
 
         } else if(statement == "OR") {
             // Set linker of previously read condition
-            reader.top().set_linker(::database::Condition_Linker_OR); 
+            reader.top()->set_linker(::database::Condition_Linker_OR); 
             
         } else {
-            cout << statement << endl;
-            // Read in specific condition and push to stack
-            ::database::Condition condition;
+            // column=entry
+            cout << "STATEMENT: " << statement << endl;
             
-            condition.set_column(statement);
+            // Read in specific condition and push to stack
+            database::Condition* condition = new database::Condition();
+            if(statement == "NOT") {
+                if(condition->has_contradiction()) {
+                    condition->set_contradiction(!reader.top()->contradiction());
+                } else {
+                    condition->set_contradiction(true);
+                }
+                cout << "CONTRADICTION" << endl;
+                input >> statement;
+            } 
+            string column = "";
+            string entry = "";
+            bool comparator_set = false;
+            for(int i = 0; i < statement.length(); ++i) {
+                if(comparator_set) {
+                    if(statement[i] == '"') {
+                        continue;
+                    } else {
+                        entry += statement[i];
+                    }
+                    continue;
+                }
 
-            input >> statement;
-            switch(statement[0]) {
-                case '=':
-                    condition.set_comparator(::database::Condition::EQUALS);
-                    break;
-                case '>':
-                    if(statement.size() == 1) {
-                        condition.set_comparator(::database::Condition::GREATER);
-                    } else if(statement[1] == '=') {
-                        condition.set_comparator(::database::Condition::GREATER_EQUAL);
-                    }
-                    break;
-                case '<':
-                    if(statement.size() == 1) {
-                        condition.set_comparator(::database::Condition::LESS_EQUAL);
-                    } else if(statement[1] == '=') {
-                        condition.set_comparator(::database::Condition::LESS);
-                    }
-                    break;
-                case '!':
-                    if(statement.size() > 1 && statement[1] == '=') {
-                        condition.set_comparator(::database::Condition::EQUALS);
-                        condition.set_contradiction(!condition.contradiction());
-                    }
-                    break;
-                default:
-                    throw runtime_error("Error: Comparator does not exist: " + statement);
+                switch(statement[i]) {
+                    case '=':
+                        condition->set_comparator(::database::Condition::EQUALS);
+                        comparator_set = true;
+                        break;
+                    case '>':
+                        if(statement.size() > i + 1 && statement[i + 1] == '=') {
+                            condition->set_comparator(::database::Condition::GREATER_EQUAL);
+                        } else {
+                            condition->set_comparator(::database::Condition::GREATER);
+                        }
+                        comparator_set = true;
+                        break;
+                    case '<':
+                        if(statement.size() > i + 1 && statement[i + 1] == '=') {
+                            condition->set_comparator(::database::Condition::LESS_EQUAL);
+                        } else {
+                            condition->set_comparator(::database::Condition::LESS);
+                        }
+                        comparator_set = true;
+                        break;
+                    case '!':
+                        if(statement.size() > i + 1 && statement[i + 1] == '=') {
+                            // condition->set_comparator(::database::Condition::EQUALS);
+                            // if(reader.top()->has_contradiction()) {
+                            //     reader.top()->set_contradiction(!reader.top().contradiction());
+                            // } else {
+                            //     reader.top().set_contradiction(true);
+                            // }
+                            condition->set_comparator(::database::Condition::NOT_EQUALS);
+                        }
+                        ++i;
+                        comparator_set = true;
+                        break;
+                    default:
+                        column += statement[i];
+                        // throw runtime_error("Error: Comparator does not exist: " + statement);
+                }
+                // input >> statement;
             }
 
-            input >> statement;
-            if(statement[0] == '"') {
-                read_string(statement, input);
-            }
-            condition.set_entry(statement);
+            condition->set_column(column);
+            condition->set_entry(entry);
+            cout << "COLUMN: " << column << endl;
+            cout << "ENTRY: " << entry << endl;
+            reader.push(condition);
         }
     }
+    cout << "READER SIZE: " << reader.size() << endl;
+    while(reader.size() > 1) {
+        database::Condition* condition = new database::Condition();
+        cout << condition->column() << " = " << condition->entry() << endl;
+        reader.pop();
+        database::Condition* top_condition_next = reader.top()->mutable_next();
+        top_condition_next = condition;
+        cout << reader.top()->next().column() << " = " << reader.top()->next().entry() << endl;
+    }
+    cout << "CONDITION: ";
+    print_condition(reader.top());
+    cout << endl;
+    exit(1);
     return reader.top();
+    
 } // construct_conditions
 
 void Driver::read_string(string &str, stringstream& input) {
@@ -659,19 +802,14 @@ void Driver::parse_create(stringstream &input) {
         input >> sub_input;
         if(sub_input[sub_input.length() - 1] == ',') {
             nullable_list.push_back(true);
-            string removed_comma = "";
-            for(int i = 0; sub_input[i] != ','; ++i) {
-                removed_comma += sub_input[i];
-            }
-            columns.emplace_back(removed_comma);
+            sub_input.pop_back();
+            types.emplace_back(sub_input);
             continue;
         } else if(sub_input[sub_input.length() - 1] == ')') {
             nullable_list.push_back(true);
             string removed_comma = "";
-            for(int i = 0; sub_input[i] != ','; ++i) {
-                removed_comma += sub_input[i];
-            }
-            types.emplace_back(removed_comma);
+            sub_input.pop_back();
+            types.emplace_back(sub_input);
             break;
         }
         types.emplace_back(sub_input);
@@ -695,7 +833,7 @@ void Driver::parse_create(stringstream &input) {
     Storage::create_table(db_name, table);
 }
 
-void Driver::parse_join(stringstream &input, string &statement) {
+void Driver::parse_join(stringstream &input, string &statement, ostream& out) {
     unordered_map<string, vector<pair<string, int> > > select_columns_map;
 
     int index = 0;
@@ -746,7 +884,6 @@ void Driver::parse_join(stringstream &input, string &statement) {
     }
 
     input >> statement;
-    cout << "STATEMENT BEFORE BAD: " << statement << endl;
     if(statement != "FROM") {
         throw std::runtime_error("Bad"); // Add nicer error message
     }
@@ -837,16 +974,16 @@ void Driver::parse_join(stringstream &input, string &statement) {
         for(int j = 0; j < row.entries_size(); ++j) {
             ::database::Entry entry = row.entries(j);
             if(entry.has_str()) {
-                cout << entry.str();
+                out << entry.str();
             } else if(entry.has_flt()) {
-                cout << entry.flt();
+                out << entry.flt();
             } else if(entry.has_num()) {
-                cout << entry.num();
+                out << entry.num();
             } else if(entry.has_boolean()) {
-                cout << entry.boolean();
+                out << entry.boolean();
             }
-            cout << " | ";
+            out << " | ";
         }
-        cout << endl;
+        out << endl;
     }
 }
